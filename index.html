@@ -705,6 +705,7 @@ function renderEmpty(tab) {
 
 // ── OVERVIEW ──
 function renderOverview() {
+  try {
   const first = scans[0], latest = scans[scans.length-1];
   document.getElementById('ov-label').textContent = `${scans.length} scan${scans.length>1?'s':''} · ${fmt(first.date)} → ${fmt(latest.date)}`;
 
@@ -740,6 +741,10 @@ function renderOverview() {
     const el = document.getElementById('ov-bmr');
     el.style.display = '';
     el.innerHTML = `<strong>⚠ Watch:</strong> BMR ${first.bmr} → ${latest.bmr} kcal (${latest.bmr - first.bmr} kcal over ${scans.length} weeks). Normal during a cut — monitor if it keeps dropping.`;
+  }
+  } catch(err) {
+    console.error('Overview render error:', err);
+    toast(`Overview error: ${err.message}`, 'var(--bad)');
   }
 }
 
@@ -859,6 +864,7 @@ async function saveScan() {
   FIELDS.forEach(({k}) => { const el = document.getElementById('ff-'+k); if (el) el.style.borderColor = ''; });
   toast('✓ Scan saved!');
   await loadScans();
+  showTab('overview');
 }
 
 // ── REPORTS ──
