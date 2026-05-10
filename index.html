@@ -8,9 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-
 <style>
-/* ── Design Tokens ─────────────────────────────── */
 :root {
   --bg:     #1a1612;
   --card:   #241e18;
@@ -26,344 +24,214 @@
   --bad:    #d56a3c;
   --r:      12px;
 }
-
-/* ── Reset ─────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'DM Sans', sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-}
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
 
-/* ── Layout ─────────────────────────────────────── */
+/* ── App shell ── */
 .app { max-width: 700px; margin: 0 auto; padding: 24px 16px 48px; }
 
-/* ── Header ─────────────────────────────────────── */
-.header {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 22px;
-}
-.logo-box {
-  width: 46px; height: 46px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 11px;
+/* ── Login screen ── */
+.login-screen {
+  min-height: 100vh;
   display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
+  padding: 24px 16px;
 }
-.hd-brand {
-  font-size: 10px; color: var(--accent);
-  font-weight: 700; letter-spacing: 2.5px;
-  text-transform: uppercase; margin-bottom: 3px;
-}
-.hd-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 20px; font-weight: 700;
-  letter-spacing: -0.3px; color: var(--text);
-}
-.hd-right { margin-left: auto; text-align: right; flex-shrink: 0; }
-.hd-date  { font-size: 13px; font-weight: 700; color: var(--sub); }
-.hd-count { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
-
-/* ── Tabs ───────────────────────────────────────── */
-.tabs {
-  display: flex; gap: 3px;
+.login-box {
+  width: 100%; max-width: 380px;
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 4px;
-  margin-bottom: 22px;
+  border-radius: 16px;
+  padding: 36px 28px 32px;
+  text-align: center;
 }
-.tab {
-  flex: 1; padding: 9px 4px;
-  border: none; border-radius: 7px;
-  font-size: 12px; font-weight: 700;
-  font-family: 'DM Sans', sans-serif;
-  cursor: pointer; transition: all .2s;
-  background: transparent; color: var(--muted);
-  letter-spacing: .2px;
+.login-logo { margin-bottom: 20px; }
+.login-brand { font-size: 10px; color: var(--accent); font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 4px; }
+.login-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.login-sub { font-size: 12px; color: var(--muted); margin-bottom: 28px; }
+.login-field { text-align: left; margin-bottom: 16px; }
+.login-field label { font-size: 9px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 1.3px; display: block; margin-bottom: 5px; }
+.login-field input {
+  width: 100%; background: var(--card2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 11px 14px; color: var(--text);
+  font-size: 14px; font-family: 'DM Sans', sans-serif; outline: none;
+  transition: border-color .2s; letter-spacing: 0.5px;
 }
+.login-field input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(213,106,60,.12); }
+.pin-label { font-size: 9px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 1.3px; margin-bottom: 10px; text-align: left; }
+.pin-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 6px; }
+.pin-row input {
+  width: 56px; height: 62px;
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text);
+  font-size: 24px; font-family: 'DM Mono', monospace; font-weight: 700;
+  text-align: center; outline: none; transition: border-color .2s;
+  -webkit-text-security: disc;
+}
+.pin-row input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(213,106,60,.15); }
+.login-err { font-size: 12px; color: var(--bad); min-height: 18px; margin-bottom: 4px; text-align: center; }
+.login-divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+/* ── Header ── */
+.header { display: flex; align-items: center; gap: 14px; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 22px; }
+.logo-box { width: 46px; height: 46px; background: var(--card); border: 1px solid var(--border); border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.hd-brand { font-size: 10px; color: var(--accent); font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 3px; }
+.hd-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+.hd-right { margin-left: auto; text-align: right; flex-shrink: 0; }
+.hd-user { font-size: 13px; font-weight: 700; color: var(--sub); }
+.hd-count { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+.logout-btn { font-size: 10px; color: var(--muted); background: transparent; border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; cursor: pointer; font-family: inherit; margin-top: 4px; transition: all .2s; }
+.logout-btn:hover { border-color: var(--bad); color: var(--bad); }
+
+/* ── Tabs ── */
+.tabs { display: flex; gap: 3px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 4px; margin-bottom: 22px; }
+.tab { flex: 1; padding: 9px 4px; border: none; border-radius: 7px; font-size: 12px; font-weight: 700; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all .2s; background: transparent; color: var(--muted); letter-spacing: .2px; }
 .tab.active { background: var(--accent); color: #fff; }
 .tab:hover:not(.active) { color: var(--sub); }
 
-/* ── Section label ──────────────────────────────── */
-.slabel {
-  font-size: 9px; color: var(--muted);
-  font-weight: 800; text-transform: uppercase;
-  letter-spacing: 1.8px; margin-bottom: 12px;
-  padding-bottom: 7px; border-bottom: 1px solid var(--border);
-}
+/* ── Section label ── */
+.slabel { font-size: 9px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 1.8px; margin-bottom: 12px; padding-bottom: 7px; border-bottom: 1px solid var(--border); }
 
-/* ── Metric cards ───────────────────────────────── */
-.cards-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px; margin-bottom: 14px;
-}
-.mc {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 13px 14px;
-}
+/* ── Metric cards ── */
+.cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.mc { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 13px 14px; }
 .mc-lbl { font-size: 9px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1.3px; margin-bottom: 8px; }
 .mc-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 4px; }
 .mc-val { font-size: 22px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--text); }
 .mc-unit { font-size: 10px; color: var(--muted); margin-left: 2px; }
 .mc-start { font-size: 9px; color: var(--muted); margin-top: 5px; }
 
-/* ── Delta badge ────────────────────────────────── */
+/* ── Delta ── */
 .d { font-size: 11px; font-weight: 700; font-family: 'DM Mono', monospace; padding: 2px 7px; border-radius: 5px; white-space: nowrap; }
 .d-good { color: var(--good); background: rgba(154,168,106,.13); border: 1px solid rgba(154,168,106,.25); }
 .d-bad  { color: var(--bad);  background: rgba(213,106,60,.13);  border: 1px solid rgba(213,106,60,.25); }
 .d-neu  { color: var(--muted); }
 
-/* ── Chart card ─────────────────────────────────── */
-.chart-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 16px 14px 14px;
-  margin-bottom: 10px;
-}
+/* ── Chart ── */
+.chart-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 14px 14px; margin-bottom: 10px; }
 .chart-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .chart-ttl { font-size: 10px; color: var(--accent); font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
 .chart-wrap { position: relative; height: 160px; }
 
-/* ── Metric pills (Trends) ──────────────────────── */
+/* ── Trend pills ── */
 .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-.pill {
-  padding: 5px 13px; border-radius: 20px;
-  font-size: 11px; font-weight: 700;
-  cursor: pointer; border: 1px solid var(--border);
-  background: var(--card); color: var(--muted);
-  font-family: 'DM Sans', sans-serif;
-  transition: all .15s;
-}
+.pill { padding: 5px 13px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--muted); font-family: 'DM Sans', sans-serif; transition: all .15s; }
 
-/* ── Trend data points ──────────────────────────── */
+/* ── Trend points ── */
 .tpoints { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
-.tp {
-  flex: 1; min-width: 72px;
-  background: var(--card2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 11px 10px; text-align: center;
-}
+.tp { flex: 1; min-width: 72px; background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 11px 10px; text-align: center; }
 .tp-date { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
 .tp-val  { font-size: 20px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--sub); }
 
-/* ── Table ──────────────────────────────────────── */
+/* ── Table ── */
 .tbl-wrap { border-radius: var(--r); border: 1px solid var(--border); overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 360px; }
 thead tr { background: var(--card2); }
-th {
-  padding: 9px 12px; font-size: 9px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 1.2px;
-  color: var(--muted); border-bottom: 1px solid var(--border);
-  white-space: nowrap; text-align: right;
-}
+th { padding: 9px 12px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap; text-align: right; }
 th:first-child { text-align: left; }
 tbody tr:nth-child(even) { background: var(--card); }
 tbody tr:nth-child(odd)  { background: var(--card2); }
-td {
-  padding: 9px 12px; border-bottom: 1px solid var(--border);
-  font-family: 'DM Mono', monospace; font-weight: 700;
-  text-align: right; color: var(--muted);
-}
-td:first-child {
-  text-align: left; font-family: 'DM Sans', sans-serif;
-  font-weight: 600; color: var(--sub); white-space: nowrap;
-}
+td { padding: 9px 12px; border-bottom: 1px solid var(--border); font-family: 'DM Mono', monospace; font-weight: 700; text-align: right; color: var(--muted); }
+td:first-child { text-align: left; font-family: 'DM Sans', sans-serif; font-weight: 600; color: var(--sub); white-space: nowrap; }
 .td-latest { color: var(--text) !important; }
 
-/* ── PIN Gate ───────────────────────────────────── */
-.pin-gate {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 36px 20px 28px;
-  text-align: center;
-}
-.pin-gate h3 {
-  font-family: 'Playfair Display', serif;
-  font-size: 20px; color: var(--text);
-  margin-bottom: 6px;
-}
-.pin-gate p { font-size: 12px; color: var(--muted); margin-bottom: 26px; line-height: 1.6; }
-.pin-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 8px; }
-.pin-row input {
-  width: 52px; height: 60px;
-  background: var(--card2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--text);
-  font-size: 24px; font-family: 'DM Mono', monospace; font-weight: 700;
-  text-align: center; outline: none;
-  transition: border-color .2s;
-  -webkit-text-security: disc;
-}
-.pin-row input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(213,106,60,.15); }
-.pin-err { font-size: 12px; color: var(--bad); margin: 6px 0 4px; min-height: 18px; }
-
-/* ── Add Form ───────────────────────────────────── */
-.add-form {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 18px;
-}
+/* ── Add form ── */
+.add-form { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 18px; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
-.fld label {
-  font-size: 9px; color: var(--muted); font-weight: 800;
-  text-transform: uppercase; letter-spacing: 1.2px;
-  display: block; margin-bottom: 5px;
-}
-.fld input {
-  width: 100%;
-  background: var(--card2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 9px 12px; color: var(--text);
-  font-size: 13px; font-family: inherit; outline: none;
-  transition: border-color .2s;
-  -moz-appearance: textfield;
-}
-.fld input::-webkit-outer-spin-button,
-.fld input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.fld label { font-size: 9px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; display: block; margin-bottom: 5px; }
+.fld input { width: 100%; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; font-family: inherit; outline: none; transition: border-color .2s; -moz-appearance: textfield; }
+.fld input::-webkit-outer-spin-button, .fld input::-webkit-inner-spin-button { -webkit-appearance: none; }
 .fld input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(213,106,60,.12); }
 .fld input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.5) sepia(1) saturate(3) hue-rotate(330deg); }
 
-/* ── Buttons ────────────────────────────────────── */
-.btn-primary {
-  width: 100%; padding: 13px;
-  border-radius: 10px;
-  background: var(--accent); color: #fff;
-  font-weight: 800; font-size: 14px;
-  border: none; cursor: pointer;
-  font-family: 'Playfair Display', serif;
-  letter-spacing: .5px;
-  transition: opacity .2s;
-  margin-top: 18px;
-}
-.btn-primary:hover { opacity: .85; }
-.btn-ghost {
-  background: transparent; border: none;
-  color: var(--muted); font-size: 12px;
-  cursor: pointer; font-family: inherit;
-  margin-top: 10px; display: block; width: 100%;
-  padding: 6px; text-align: center;
-  transition: color .2s;
-}
-.btn-ghost:hover { color: var(--sub); }
-
-/* ── Scans list ─────────────────────────────────── */
-.scan-list {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 16px; margin-top: 14px;
-}
-.si {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 9px 12px;
-  background: var(--card2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  margin-bottom: 6px;
-}
+/* ── Scan list ── */
+.scan-list { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-top: 14px; }
+.si { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; }
 .si:last-child { margin-bottom: 0; }
 .si-date { font-weight: 700; font-size: 13px; color: var(--text); }
 .si-tag  { font-size: 9px; color: var(--accent); margin-left: 6px; letter-spacing: 1px; }
 .si-meta { font-size: 11px; color: var(--muted); margin-top: 1px; }
 
-/* ── Alert strip ────────────────────────────────── */
-.alert {
-  background: var(--card2);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--flame);
-  border-radius: 10px;
-  padding: 11px 14px;
-  font-size: 11px; color: var(--sub);
-  line-height: 1.7;
-}
+/* ── Buttons ── */
+.btn-primary { width: 100%; padding: 13px; border-radius: 10px; background: var(--accent); color: #fff; font-weight: 800; font-size: 14px; border: none; cursor: pointer; font-family: 'Playfair Display', serif; letter-spacing: .5px; transition: opacity .2s; margin-top: 18px; }
+.btn-primary:hover { opacity: .85; }
+.btn-ghost { background: transparent; border: none; color: var(--muted); font-size: 12px; cursor: pointer; font-family: inherit; margin-top: 10px; display: block; width: 100%; padding: 6px; text-align: center; transition: color .2s; }
+.btn-ghost:hover { color: var(--sub); }
+
+/* ── Empty state ── */
+.empty-state { text-align: center; padding: 48px 20px; color: var(--muted); }
+.empty-state h3 { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--sub); margin-bottom: 8px; }
+.empty-state p { font-size: 12px; line-height: 1.7; }
+
+/* ── Alert ── */
+.alert { background: var(--card2); border: 1px solid var(--border); border-left: 3px solid var(--flame); border-radius: 10px; padding: 11px 14px; font-size: 11px; color: var(--sub); line-height: 1.7; }
 .alert strong { color: var(--flame); }
 
-/* ── Toast ──────────────────────────────────────── */
-.toast {
-  position: fixed; bottom: 24px; left: 50%;
-  transform: translateX(-50%) translateY(60px);
-  background: var(--carb); color: #1a1612;
-  font-weight: 700; font-size: 13px;
-  padding: 10px 22px; border-radius: 30px;
-  opacity: 0; transition: all .3s; z-index: 1000;
-  white-space: nowrap; pointer-events: none;
-}
+/* ── Toast ── */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(60px); background: var(--carb); color: #1a1612; font-weight: 700; font-size: 13px; padding: 10px 22px; border-radius: 30px; opacity: 0; transition: all .3s; z-index: 1000; white-space: nowrap; pointer-events: none; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* ── Loading ────────────────────────────────────── */
-.loading {
-  text-align: center; padding: 60px 20px;
-  color: var(--muted); font-size: 13px;
-  display: flex; flex-direction: column; align-items: center; gap: 14px;
-}
-.spinner {
-  width: 28px; height: 28px;
-  border: 2px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin .8s linear infinite;
-}
+/* ── Loading ── */
+.loading { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 13px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Setup notice ───────────────────────────────── */
-.setup-notice {
-  background: var(--card);
-  border: 1px solid var(--flame);
-  border-left: 4px solid var(--flame);
-  border-radius: var(--r);
-  padding: 20px;
-  font-size: 13px;
-  line-height: 1.8;
-  color: var(--sub);
-}
-.setup-notice h3 { font-family: 'Playfair Display', serif; color: var(--flame); margin-bottom: 8px; font-size: 16px; }
-.setup-notice code { background: var(--card2); padding: 2px 6px; border-radius: 4px; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); }
-
-/* ── Footer ─────────────────────────────────────── */
-.footer {
-  margin-top: 28px; padding-top: 14px;
-  border-top: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center; gap: 7px;
-}
+/* ── Footer ── */
+.footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: center; gap: 7px; }
 .footer span { font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
 
-/* ── Scrollbar ──────────────────────────────────── */
+/* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-/* ── Mobile tweaks ──────────────────────────────── */
+/* ── Mobile ── */
 @media (max-width: 420px) {
   .hd-title { font-size: 17px; }
   .tab { font-size: 11px; padding: 8px 2px; }
   .mc-val { font-size: 19px; }
-  .form-grid { grid-template-columns: 1fr 1fr; }
-  .pin-row input { width: 46px; height: 54px; font-size: 20px; }
+  .pin-row input { width: 48px; height: 56px; font-size: 20px; }
+  .login-box { padding: 28px 20px 24px; }
 }
 </style>
 </head>
 <body>
-<div class="app">
 
-  <!-- ── HEADER ─────────────────────────────────── -->
+<!-- ── LOGIN SCREEN ── -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" style="margin-bottom:10px">
+        <path d="M12 2C12 2 7 8 7 13C7 16.866 9.134 20 12 20C14.866 20 17 16.866 17 13C17 8 12 2 12 2Z" fill="#E07B2A" opacity="0.9"/>
+        <path d="M12 8C12 8 9.5 11.5 9.5 14C9.5 15.933 10.567 17 12 17C13.433 17 14.5 15.933 14.5 14C14.5 11.5 12 8 12 8Z" fill="#f3ece0" opacity="0.85"/>
+      </svg>
+      <div class="login-brand">SoulGainz</div>
+      <div class="login-title">Body Composition</div>
+      <div class="login-sub">Sign in to view your data</div>
+    </div>
+
+    <div class="login-field">
+      <label>Username</label>
+      <input type="text" id="l-username" placeholder="your username" autocomplete="username" autocapitalize="none" spellcheck="false">
+    </div>
+
+    <div class="login-divider"></div>
+
+    <div class="pin-label">4-Digit PIN</div>
+    <div class="pin-row">
+      <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="lp0">
+      <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="lp1">
+      <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="lp2">
+      <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="lp3">
+    </div>
+    <div class="login-err" id="login-err"></div>
+
+    <button class="btn-primary" onclick="login()" style="margin-top:16px">Sign In →</button>
+  </div>
+</div>
+
+<!-- ── MAIN APP ── -->
+<div class="app" id="main-app" style="display:none">
+
   <header class="header">
     <div class="logo-box">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -376,26 +244,25 @@ td:first-child {
       <h1 class="hd-title">Body Composition</h1>
     </div>
     <div class="hd-right">
-      <div class="hd-date" id="hd-date">—</div>
-      <div class="hd-count" id="hd-count">Loading…</div>
+      <div class="hd-user" id="hd-user">—</div>
+      <div class="hd-count" id="hd-count">0 scans</div>
+      <button class="logout-btn" onclick="logout()">Sign out</button>
     </div>
   </header>
 
-  <!-- ── TABS ───────────────────────────────────── -->
   <nav class="tabs" id="tabs">
     <button class="tab active" data-tab="overview">Overview</button>
-    <button class="tab"        data-tab="trends">Trends</button>
-    <button class="tab"        data-tab="table">All Data</button>
-    <button class="tab"        data-tab="add">+ Add</button>
+    <button class="tab" data-tab="trends">Trends</button>
+    <button class="tab" data-tab="table">All Data</button>
+    <button class="tab" data-tab="add">+ Add</button>
   </nav>
 
-  <!-- ── LOADING ────────────────────────────────── -->
   <div class="loading" id="loading">
     <div class="spinner"></div>
-    <span>Loading scans…</span>
+    <span>Loading your scans…</span>
   </div>
 
-  <!-- ── OVERVIEW ───────────────────────────────── -->
+  <!-- OVERVIEW -->
   <section id="tab-overview" style="display:none">
     <div class="slabel" id="ov-label">—</div>
     <div class="cards-grid" id="ov-cards"></div>
@@ -406,10 +273,10 @@ td:first-child {
       </div>
       <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
     </div>
-    <div class="alert" id="ov-bmr" style="margin-top:10px"></div>
+    <div class="alert" id="ov-bmr" style="margin-top:10px;display:none"></div>
   </section>
 
-  <!-- ── TRENDS ─────────────────────────────────── -->
+  <!-- TRENDS -->
   <section id="tab-trends" style="display:none">
     <div class="slabel">Select a metric</div>
     <div class="pills" id="tr-pills"></div>
@@ -423,40 +290,17 @@ td:first-child {
     <div class="tpoints" id="tr-points"></div>
   </section>
 
-  <!-- ── ALL DATA ───────────────────────────────── -->
+  <!-- TABLE -->
   <section id="tab-table" style="display:none">
     <div class="slabel">Full metrics breakdown</div>
     <div class="tbl-wrap">
-      <table>
-        <thead id="tbl-head"></thead>
-        <tbody id="tbl-body"></tbody>
-      </table>
+      <table><thead id="tbl-head"></thead><tbody id="tbl-body"></tbody></table>
     </div>
   </section>
 
-  <!-- ── ADD SCAN ───────────────────────────────── -->
+  <!-- ADD -->
   <section id="tab-add" style="display:none">
-
-    <!-- PIN gate -->
-    <div id="pin-gate" class="pin-gate">
-      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" style="margin-bottom:14px">
-        <path d="M12 2C12 2 7 8 7 13C7 16.866 9.134 20 12 20C14.866 20 17 16.866 17 13C17 8 12 2 12 2Z" fill="#E07B2A" opacity="0.9"/>
-        <path d="M12 8C12 8 9.5 11.5 9.5 14C9.5 15.933 10.567 17 12 17C13.433 17 14.5 15.933 14.5 14C14.5 11.5 12 8 12 8Z" fill="#f3ece0" opacity="0.85"/>
-      </svg>
-      <h3>Enter Access Code</h3>
-      <p>Enter your 4-digit code to add<br>or manage scan data</p>
-      <div class="pin-row">
-        <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="p0">
-        <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="p1">
-        <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="p2">
-        <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="p3">
-      </div>
-      <div class="pin-err" id="pin-err"></div>
-      <button class="btn-primary" onclick="checkPin()">Unlock →</button>
-    </div>
-
-    <!-- Add form (hidden until PIN unlocked) -->
-    <div id="add-form" class="add-form" style="display:none">
+    <div class="add-form">
       <div class="slabel">New Sunday Scan</div>
       <div class="fld">
         <label>Date *</label>
@@ -464,18 +308,13 @@ td:first-child {
       </div>
       <div class="form-grid" id="form-fields"></div>
       <button class="btn-primary" onclick="saveScan()">Save Scan →</button>
-      <button class="btn-ghost" onclick="lockAdd()">🔒 Lock &amp; exit</button>
     </div>
-
-    <!-- Scan history (hidden until PIN unlocked) -->
     <div id="scan-list" class="scan-list" style="display:none">
       <div class="slabel" id="sl-label">Saved scans</div>
       <div id="sl-items"></div>
     </div>
-
   </section>
 
-  <!-- ── FOOTER ─────────────────────────────────── -->
   <footer class="footer">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
       <path d="M12 2C12 2 7 8 7 13C7 16.866 9.134 20 12 20C14.866 20 17 16.866 17 13C17 8 12 2 12 2Z" fill="#E07B2A" opacity="0.9"/>
@@ -483,31 +322,20 @@ td:first-child {
     </svg>
     <span>SoulGainz · Body Composition Tracker</span>
   </footer>
+</div>
 
-</div><!-- /.app -->
-
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ════════════════════════════════════════════════════════
-//  ⚙️  CONFIG  — update these three values before deploying
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════
+//  ⚙️  CONFIG
+// ════════════════════════════════════════════
 const SUPABASE_URL = 'https://wbthkwbnrwfspcacqujd.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndidGhrd2Jucndmc3BjYWNxdWpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MDcyMTMsImV4cCI6MjA5Mzk4MzIxM30.uKYTVu63qPLlOSYaMdgBUxSLlS01KXiVCXXWGrY1lHI';
-const ACCESS_PIN   = '2026';
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════
 
-const TABLE = 'scans';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ── Seed data ─────────────────────────────────────────
-const SEED = [
-  { date:'2026-04-26', weight:102.1, body_fat_pct:20.8, body_fat_mass:21.2, lean_mass:75.4, skeletal_muscle:52.6, subcut_fat:18.5, visceral_fat:10, body_water:59.0, body_cell_mass:52.9, bmr:2087, heart_rate:72, metabolic_age:23, health_score:602 },
-  { date:'2026-05-03', weight:101.1, body_fat_pct:20.7, body_fat_mass:21.0, lean_mass:75.3, skeletal_muscle:52.5, subcut_fat:18.2, visceral_fat:10, body_water:59.0, body_cell_mass:52.9, bmr:2077, heart_rate:73, metabolic_age:23, health_score:602 },
-  { date:'2026-05-10', weight:99.2,  body_fat_pct:20.2, body_fat_mass:20.1, lean_mass:75.5, skeletal_muscle:52.7, subcut_fat:17.5, visceral_fat:9,  body_water:59.7, body_cell_mass:53.4, bmr:2062, heart_rate:64, metabolic_age:23, health_score:602 },
-];
-
-// ── Field definitions ─────────────────────────────────
 const FIELDS = [
   { k:'weight',          l:'Weight',             u:'kg',   lb:true  },
   { k:'body_fat_pct',    l:'Body Fat %',         u:'%',    lb:true  },
@@ -535,27 +363,18 @@ const CHART_METRICS = [
   { k:'body_cell_mass',  l:'Body Cell Mass (kg)',    c:'#c4b87a', lb:false },
 ];
 
-// ── State ──────────────────────────────────────────────
+// ── State ──────────────────────────────────
+let currentUser = null;
 let scans       = [];
 let activeTab   = 'overview';
 let activeMet   = 'weight';
-let unlocked    = false;
 let wChart      = null;
 let trChart     = null;
-let db          = null;
-const isDemo    = (SUPABASE_URL === 'YOUR_SUPABASE_URL');
 
-// ── Init Supabase ──────────────────────────────────────
-if (!isDemo) {
-  db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-}
+// ── Helpers ────────────────────────────────
+const fmt = d => new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short' });
 
-// ── Helpers ────────────────────────────────────────────
-function fmt(d) {
-  return new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short' });
-}
-
-function deltaHtml(a, b, lb) {
+function dHtml(a, b, lb) {
   const d = parseFloat(b) - parseFloat(a);
   if (Math.abs(d) < 0.05) return '<span class="d d-neu">—</span>';
   const good = lb ? d < 0 : d > 0;
@@ -569,86 +388,144 @@ function toast(msg) {
   setTimeout(() => el.classList.remove('show'), 3000);
 }
 
-function chartDefaults(color) {
+function chartOpts(color) {
   return {
-    responsive: true,
-    maintainAspectRatio: false,
+    responsive: true, maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
-      tooltip: {
-        backgroundColor: '#2e261d',
-        titleColor: '#b8a890',
-        bodyColor: color,
-        bodyFont: { family:'DM Mono', weight:'bold', size:16 },
-        borderColor: '#3a2f24',
-        borderWidth: 1,
-        padding: 10,
-        callbacks: { title: items => items[0].label }
-      }
+      tooltip: { backgroundColor:'#2e261d', titleColor:'#b8a890', bodyColor:color, bodyFont:{ family:'DM Mono', weight:'bold', size:16 }, borderColor:'#3a2f24', borderWidth:1, padding:10 }
     },
     scales: {
-      x: {
-        grid: { color:'#3a2f24', drawBorder:false },
-        ticks: { color:'#7a6d5e', font:{ size:10 } },
-        border: { display:false }
-      },
-      y: {
-        grid: { color:'#3a2f24', drawBorder:false },
-        ticks: { color:'#7a6d5e', font:{ size:10 } },
-        border: { display:false }
-      }
+      x: { grid:{ color:'#3a2f24', drawBorder:false }, ticks:{ color:'#7a6d5e', font:{ size:10 } }, border:{ display:false } },
+      y: { grid:{ color:'#3a2f24', drawBorder:false }, ticks:{ color:'#7a6d5e', font:{ size:10 } }, border:{ display:false } }
     }
   };
 }
 
-// ── Data loading ───────────────────────────────────────
-async function loadScans() {
-  if (isDemo) {
-    scans = SEED;
-    renderAll();
+// ── Session ────────────────────────────────
+function saveSession(user) {
+  sessionStorage.setItem('sg_session', JSON.stringify(user));
+}
+function clearSession() {
+  sessionStorage.removeItem('sg_session');
+}
+function getSession() {
+  try { return JSON.parse(sessionStorage.getItem('sg_session')); } catch { return null; }
+}
+
+// ── Auth ───────────────────────────────────
+async function init() {
+  const session = getSession();
+  if (session) {
+    currentUser = session;
+    showApp();
+    await loadScans();
+  } else {
+    showLoginScreen();
+  }
+}
+
+function showLoginScreen() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('main-app').style.display     = 'none';
+  setTimeout(() => document.getElementById('l-username').focus(), 100);
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-app').style.display     = '';
+  document.getElementById('hd-user').textContent = currentUser.display_name || currentUser.username;
+}
+
+async function login() {
+  const username = document.getElementById('l-username').value.trim().toLowerCase();
+  const pin      = [0,1,2,3].map(i => document.getElementById('lp'+i).value).join('');
+
+  if (!username) { showLoginErr('Please enter your username'); return; }
+  if (pin.length < 4) { showLoginErr('Please enter your 4-digit PIN'); return; }
+
+  const { data, error } = await db
+    .from('users')
+    .select('*')
+    .eq('username', username)
+    .eq('pin', pin)
+    .maybeSingle();
+
+  if (error || !data) {
+    showLoginErr('Incorrect username or PIN');
+    [0,1,2,3].forEach(i => { document.getElementById('lp'+i).value = ''; });
+    document.getElementById('lp0').focus();
     return;
   }
 
-  const { data, error } = await db.from(TABLE).select('*').order('date', { ascending:true });
-  if (error) { console.error(error); showSetupError(error.message); return; }
-
-  if (!data || data.length === 0) {
-    const { error: seedErr } = await db.from(TABLE).upsert(SEED, { onConflict:'date' });
-    if (seedErr) { console.error(seedErr); return; }
-    return loadScans();
-  }
-
-  scans = data;
-  renderAll();
+  currentUser = data;
+  saveSession(data);
+  showApp();
+  await loadScans();
 }
 
-function showSetupError(msg) {
-  document.getElementById('loading').innerHTML = `
-    <div class="setup-notice">
-      <h3>⚠ Setup Required</h3>
-      <p>Could not connect to the database. Open <code>index.html</code> and update the three config values at the top of the script:</p>
-      <p style="margin-top:10px"><code>SUPABASE_URL</code> · <code>SUPABASE_KEY</code> · <code>ACCESS_PIN</code></p>
-      <p style="margin-top:10px;font-size:11px;color:var(--muted)">Error: ${msg}</p>
-    </div>`;
-  document.getElementById('loading').style.padding = '0';
+function showLoginErr(msg) {
+  const el = document.getElementById('login-err');
+  el.textContent = msg;
+  setTimeout(() => { el.textContent = ''; }, 3500);
 }
 
-// ── Render all ─────────────────────────────────────────
-function renderAll() {
+function logout() {
+  clearSession();
+  currentUser = null;
+  scans = [];
+  if (wChart)  { wChart.destroy();  wChart  = null; }
+  if (trChart) { trChart.destroy(); trChart = null; }
+  document.getElementById('l-username').value = '';
+  [0,1,2,3].forEach(i => { document.getElementById('lp'+i).value = ''; });
+  showLoginScreen();
+}
+
+// PIN inputs setup
+[0,1,2,3].forEach(i => {
+  const el = document.getElementById('lp' + i);
+  el.addEventListener('input', () => {
+    if (el.value.length === 1 && i < 3) document.getElementById('lp'+(i+1)).focus();
+    if (i === 3 && el.value.length === 1) login();
+  });
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Backspace' && !el.value && i > 0) document.getElementById('lp'+(i-1)).focus();
+    if (e.key === 'Enter') login();
+  });
+});
+document.getElementById('l-username').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('lp0').focus();
+});
+
+// ── Data ───────────────────────────────────
+async function loadScans() {
+  document.getElementById('loading').style.display = 'flex';
+  ['overview','trends','table','add'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = 'none';
+  });
+
+  const { data, error } = await db
+    .from('scans')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('date', { ascending: true });
+
   document.getElementById('loading').style.display = 'none';
 
-  const latest = scans[scans.length - 1];
-  document.getElementById('hd-date').textContent  = fmt(latest.date);
-  document.getElementById('hd-count').textContent = `${scans.length} scan${scans.length>1?'s':''}`;
+  if (error) { toast('Error loading scans'); console.error(error); return; }
+
+  scans = data || [];
+
+  const count = scans.length;
+  document.getElementById('hd-count').textContent = `${count} scan${count !== 1 ? 's' : ''}`;
 
   showTab(activeTab);
 }
 
-// ── Tab switching ──────────────────────────────────────
+// ── Tabs ───────────────────────────────────
 document.getElementById('tabs').addEventListener('click', e => {
   const btn = e.target.closest('.tab');
-  if (!btn) return;
-  showTab(btn.dataset.tab);
+  if (btn) showTab(btn.dataset.tab);
 });
 
 function showTab(tab) {
@@ -657,135 +534,91 @@ function showTab(tab) {
   ['overview','trends','table','add'].forEach(t => {
     document.getElementById('tab-' + t).style.display = t === tab ? '' : 'none';
   });
+  if (!scans.length && tab !== 'add') { renderEmpty(tab); return; }
   if (tab === 'overview') renderOverview();
   if (tab === 'trends')   renderTrends();
   if (tab === 'table')    renderTable();
   if (tab === 'add')      renderAdd();
 }
 
-// ── OVERVIEW ──────────────────────────────────────────
+function renderEmpty(tab) {
+  const el = document.getElementById('tab-' + tab);
+  el.innerHTML = `<div class="empty-state">
+    <h3>No scans yet</h3>
+    <p>Head to the <strong style="color:var(--accent)">+ Add</strong> tab to log your first Hume scan.</p>
+  </div>`;
+}
+
+// ── OVERVIEW ──────────────────────────────
 function renderOverview() {
-  const first  = scans[0];
-  const latest = scans[scans.length - 1];
+  const first = scans[0], latest = scans[scans.length - 1];
+  document.getElementById('ov-label').textContent = `${scans.length} scan${scans.length>1?'s':''} · ${fmt(first.date)} → ${fmt(latest.date)}`;
 
-  document.getElementById('ov-label').textContent = `${scans.length} scans · ${fmt(first.date)} → ${fmt(latest.date)}`;
-
-  // Cards
   const cardFields = [
-    { k:'weight',         l:'Weight',         u:'kg',  lb:true  },
-    { k:'body_fat_pct',   l:'Body Fat',       u:'%',   lb:true  },
-    { k:'lean_mass',      l:'Lean Mass',      u:'kg',  lb:false },
-    { k:'skeletal_muscle',l:'Skeletal Muscle',u:'kg',  lb:false },
-    { k:'visceral_fat',   l:'Visceral Fat',   u:'',    lb:true  },
-    { k:'body_water',     l:'Body Water',     u:'%',   lb:false },
-    { k:'body_cell_mass', l:'Body Cell Mass', u:'kg',  lb:false },
-    { k:'heart_rate',     l:'Heart Rate',     u:'BPM', lb:true  },
+    {k:'weight',lb:true,l:'Weight',u:'kg'},{k:'body_fat_pct',lb:true,l:'Body Fat',u:'%'},
+    {k:'lean_mass',lb:false,l:'Lean Mass',u:'kg'},{k:'skeletal_muscle',lb:false,l:'Skeletal Muscle',u:'kg'},
+    {k:'visceral_fat',lb:true,l:'Visceral Fat',u:''},{k:'body_water',lb:false,l:'Body Water',u:'%'},
+    {k:'body_cell_mass',lb:false,l:'Body Cell Mass',u:'kg'},{k:'heart_rate',lb:true,l:'Heart Rate',u:'BPM'},
   ];
 
   document.getElementById('ov-cards').innerHTML = cardFields.map(({k,l,u,lb}) => `
     <div class="mc">
       <div class="mc-lbl">${l}</div>
       <div class="mc-row">
-        <div>
-          <span class="mc-val">${latest[k]}</span>
-          ${u ? `<span class="mc-unit">${u}</span>` : ''}
-        </div>
-        ${deltaHtml(first[k], latest[k], lb)}
+        <div><span class="mc-val">${latest[k] ?? '—'}</span>${u?`<span class="mc-unit">${u}</span>`:''}</div>
+        ${dHtml(first[k], latest[k], lb)}
       </div>
-      <div class="mc-start">Start: ${first[k]}${u==='%'?'%':u?' '+u:''}</div>
+      <div class="mc-start">Start: ${first[k] ?? '—'}${u==='%'?'%':u?' '+u:''}</div>
     </div>
   `).join('');
 
-  // Weight delta
-  document.getElementById('ov-wdelta').innerHTML = deltaHtml(first.weight, latest.weight, true);
-
-  // Weight chart
-  const labels = scans.map(s => fmt(s.date));
-  const vals   = scans.map(s => s.weight);
+  document.getElementById('ov-wdelta').innerHTML = dHtml(first.weight, latest.weight, true);
 
   if (wChart) wChart.destroy();
-  const ctx  = document.getElementById('weightChart').getContext('2d');
-  const grad = ctx.createLinearGradient(0, 0, 0, 160);
-  grad.addColorStop(0, 'rgba(213,106,60,0.32)');
-  grad.addColorStop(1, 'rgba(213,106,60,0.00)');
-
+  const ctx = document.getElementById('weightChart').getContext('2d');
+  const grad = ctx.createLinearGradient(0,0,0,160);
+  grad.addColorStop(0,'rgba(213,106,60,0.32)'); grad.addColorStop(1,'rgba(213,106,60,0)');
   wChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        data: vals,
-        borderColor: '#d56a3c',
-        borderWidth: 2.5,
-        backgroundColor: grad,
-        fill: true,
-        tension: 0.4,
-        pointBackgroundColor: '#d56a3c',
-        pointRadius: 5,
-        pointHoverRadius: 7,
-      }]
-    },
-    options: chartDefaults('#d56a3c'),
+    type:'line',
+    data:{ labels:scans.map(s=>fmt(s.date)), datasets:[{ data:scans.map(s=>s.weight), borderColor:'#d56a3c', borderWidth:2.5, backgroundColor:grad, fill:true, tension:0.4, pointBackgroundColor:'#d56a3c', pointRadius:5, pointHoverRadius:7 }] },
+    options: chartOpts('#d56a3c')
   });
 
-  // BMR alert
-  document.getElementById('ov-bmr').innerHTML =
-    `<strong>⚠ Watch:</strong> BMR trending down (${first.bmr} → ${latest.bmr} kcal, ${latest.bmr - first.bmr} kcal over ${scans.length} weeks). Normal during a cut — monitor if it keeps dropping.`;
+  if (scans.length >= 2) {
+    const bmrEl = document.getElementById('ov-bmr');
+    bmrEl.style.display = '';
+    bmrEl.innerHTML = `<strong>⚠ Watch:</strong> BMR trending (${first.bmr} → ${latest.bmr} kcal, ${latest.bmr - first.bmr} kcal over ${scans.length} weeks). Normal during a cut — monitor if it keeps dropping.`;
+  }
 }
 
-// ── TRENDS ────────────────────────────────────────────
+// ── TRENDS ────────────────────────────────
 function renderTrends() {
-  // Pills
   document.getElementById('tr-pills').innerHTML = CHART_METRICS.map(m => `
     <button class="pill ${activeMet===m.k?'active':''}"
       style="${activeMet===m.k?`border-color:${m.c};background:${m.c}22;color:${m.c}`:''}"
       onclick="selectMetric('${m.k}')">${m.l}</button>
   `).join('');
-
   renderTrendChart();
 }
 
-function selectMetric(key) {
-  activeMet = key;
-  renderTrends();
-}
+function selectMetric(key) { activeMet = key; renderTrends(); }
 
 function renderTrendChart() {
-  const m      = CHART_METRICS.find(x => x.k === activeMet);
-  const first  = scans[0];
-  const latest = scans[scans.length - 1];
-  const labels = scans.map(s => fmt(s.date));
-  const vals   = scans.map(s => s[m.k]);
-
+  const m = CHART_METRICS.find(x => x.k === activeMet);
+  const first = scans[0], latest = scans[scans.length-1];
   document.getElementById('tr-title').textContent = m.l;
-  document.getElementById('tr-delta').innerHTML   = deltaHtml(first[m.k], latest[m.k], m.lb);
+  document.getElementById('tr-delta').innerHTML   = dHtml(first[m.k], latest[m.k], m.lb);
 
   if (trChart) trChart.destroy();
-  const ctx  = document.getElementById('trendChart').getContext('2d');
-  const grad = ctx.createLinearGradient(0, 0, 0, 160);
-  grad.addColorStop(0, m.c + '42');
-  grad.addColorStop(1, m.c + '00');
-
+  const ctx = document.getElementById('trendChart').getContext('2d');
+  const grad = ctx.createLinearGradient(0,0,0,160);
+  grad.addColorStop(0,m.c+'42'); grad.addColorStop(1,m.c+'00');
   trChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        data: vals,
-        borderColor: m.c,
-        borderWidth: 2.5,
-        backgroundColor: grad,
-        fill: true,
-        tension: 0.4,
-        pointBackgroundColor: m.c,
-        pointRadius: 5,
-        pointHoverRadius: 7,
-      }]
-    },
-    options: chartDefaults(m.c),
+    type:'line',
+    data:{ labels:scans.map(s=>fmt(s.date)), datasets:[{ data:scans.map(s=>s[m.k]), borderColor:m.c, borderWidth:2.5, backgroundColor:grad, fill:true, tension:0.4, pointBackgroundColor:m.c, pointRadius:5, pointHoverRadius:7 }] },
+    options: chartOpts(m.c)
   });
 
-  // Data points
   document.getElementById('tr-points').innerHTML = scans.map(s => `
     <div class="tp" style="${s.date===latest.date?`border-color:${m.c}77`:''}">
       <div class="tp-date">${fmt(s.date)}</div>
@@ -796,57 +629,44 @@ function renderTrendChart() {
   `).join('');
 }
 
-// ── TABLE ─────────────────────────────────────────────
+// ── TABLE ─────────────────────────────────
 function renderTable() {
-  const first  = scans[0];
-  const latest = scans[scans.length - 1];
-
+  const first = scans[0], latest = scans[scans.length-1];
   document.getElementById('tbl-head').innerHTML = `<tr>
     <th>Metric</th>
-    ${scans.map(s => `<th style="${s.date===latest.date?'color:var(--accent)':''}">${fmt(s.date)}${s.date===latest.date?' ●':''}</th>`).join('')}
+    ${scans.map(s=>`<th style="${s.date===latest.date?'color:var(--accent)':''}">${fmt(s.date)}${s.date===latest.date?' ●':''}</th>`).join('')}
     <th>Δ Total</th>
   </tr>`;
-
   document.getElementById('tbl-body').innerHTML = FIELDS.map(({k,l,u,lb}) => `
     <tr>
       <td>${l}</td>
-      ${scans.map(s => {
-        const v = s[k] ?? '—';
-        const unit = (u && u !== '%') ? `<span style="font-size:9px;color:var(--muted);margin-left:2px">${u}</span>` : '';
-        const pct  = u === '%' ? '%' : '';
+      ${scans.map(s=>{
+        const v=s[k]??'—', pct=u==='%'?'%':'', unit=(u&&u!=='%')?`<span style="font-size:9px;color:var(--muted);margin-left:2px">${u}</span>`:'';
         return `<td class="${s.date===latest.date?'td-latest':''}">${v}${pct}${unit}</td>`;
       }).join('')}
-      <td>${deltaHtml(first[k], latest[k], lb)}</td>
+      <td>${dHtml(first[k], latest[k], lb)}</td>
     </tr>
   `).join('');
 }
 
-// ── ADD SCAN ──────────────────────────────────────────
+// ── ADD ────────────────────────────────────
 function renderAdd() {
-  // Build form fields
   document.getElementById('form-fields').innerHTML = FIELDS.map(({k,l,u}) => `
     <div class="fld">
       <label>${l}${u?' ('+u+')':''}</label>
-      <input type="number" step="0.1" id="ff-${k}"
-        placeholder="${scans.length ? (scans[scans.length-1][k] ?? '') : ''}">
+      <input type="number" step="0.1" id="ff-${k}" placeholder="${scans.length ? (scans[scans.length-1][k]??'') : ''}">
     </div>
   `).join('');
 
-  if (unlocked) {
-    document.getElementById('pin-gate').style.display   = 'none';
-    document.getElementById('add-form').style.display   = '';
-    document.getElementById('scan-list').style.display  = '';
+  if (scans.length) {
+    document.getElementById('scan-list').style.display = '';
     renderScanList();
-  } else {
-    document.getElementById('pin-gate').style.display   = '';
-    document.getElementById('add-form').style.display   = 'none';
-    document.getElementById('scan-list').style.display  = 'none';
   }
 }
 
 function renderScanList() {
-  const latest = scans[scans.length - 1];
-  document.getElementById('sl-label').textContent = `Saved scans (${scans.length})`;
+  const latest = scans[scans.length-1];
+  document.getElementById('sl-label').textContent = `Your scans (${scans.length})`;
   document.getElementById('sl-items').innerHTML = [...scans].reverse().map(s => `
     <div class="si">
       <div>
@@ -858,79 +678,27 @@ function renderScanList() {
   `).join('');
 }
 
-// ── PIN ───────────────────────────────────────────────
-function checkPin() {
-  const entered = [0,1,2,3].map(i => document.getElementById('p'+i).value).join('');
-  if (entered === ACCESS_PIN) {
-    unlocked = true;
-    renderAdd();
-  } else {
-    document.getElementById('pin-err').textContent = 'Incorrect code — try again.';
-    [0,1,2,3].forEach(i => { document.getElementById('p'+i).value = ''; });
-    document.getElementById('p0').focus();
-    setTimeout(() => { document.getElementById('pin-err').textContent = ''; }, 3000);
-  }
-}
-
-function lockAdd() {
-  unlocked = false;
-  [0,1,2,3].forEach(i => { document.getElementById('p'+i).value = ''; });
-  renderAdd();
-}
-
-// PIN input: auto-advance + auto-check
-[0,1,2,3].forEach(i => {
-  const el = document.getElementById('p' + i);
-  el.addEventListener('input', () => {
-    if (el.value.length === 1) {
-      if (i < 3) document.getElementById('p' + (i+1)).focus();
-      else       checkPin();
-    }
-  });
-  el.addEventListener('keydown', e => {
-    if (e.key === 'Backspace' && !el.value && i > 0)
-      document.getElementById('p' + (i-1)).focus();
-  });
-});
-
-// ── Save scan ─────────────────────────────────────────
 async function saveScan() {
   const date = document.getElementById('f-date').value;
   if (!date) { toast('Please select a date'); return; }
 
-  const scan = { date };
-  FIELDS.forEach(({ k }) => {
-    const v = document.getElementById('ff-' + k).value;
+  const scan = { date, user_id: currentUser.id };
+  FIELDS.forEach(({k}) => {
+    const v = document.getElementById('ff-'+k).value;
     scan[k] = v !== '' ? parseFloat(v) : null;
   });
 
-  if (isDemo) {
-    // Demo mode: just add to local array
-    scans = scans.filter(s => s.date !== date);
-    scans.push(scan);
-    scans.sort((a,b) => a.date.localeCompare(b.date));
-  } else {
-    const { error } = await db.from(TABLE).upsert([scan], { onConflict:'date' });
-    if (error) { toast('Error saving — check console'); console.error(error); return; }
-    const { data } = await db.from(TABLE).select('*').order('date', { ascending:true });
-    if (data) scans = data;
-  }
+  const { error } = await db.from('scans').upsert([scan], { onConflict:'date' });
+  if (error) { toast('Error saving scan'); console.error(error); return; }
 
-  // Reset form
-  document.getElementById('f-date').value = '';
-  FIELDS.forEach(({ k }) => { document.getElementById('ff-' + k).value = ''; });
-
-  // Update header + re-render
-  const latest = scans[scans.length - 1];
-  document.getElementById('hd-date').textContent  = fmt(latest.date);
-  document.getElementById('hd-count').textContent = `${scans.length} scans`;
-
-  renderScanList();
   toast('✓ Scan saved!');
+  document.getElementById('f-date').value = '';
+  FIELDS.forEach(({k}) => { document.getElementById('ff-'+k).value = ''; });
+  await loadScans();
 }
 
-// ── Boot ──────────────────────────────────────────────
-loadScans();
+// ── Boot ───────────────────────────────────
+init();
 </script>
 </body>
 </html>
