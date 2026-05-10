@@ -979,7 +979,10 @@ async function processReport() {
       const aiData = await res.json();
 
       if (!res.ok) {
-        aiError = aiData.error || `HTTP ${res.status}`;
+        const errMsg = typeof aiData.error === 'object'
+          ? (aiData.error?.message || JSON.stringify(aiData.error))
+          : (aiData.error || `HTTP ${res.status}`);
+        aiError = errMsg;
         console.error('AI function error:', aiData);
       } else {
         const rawText = aiData.content?.find(b => b.type === 'text')?.text || '';
