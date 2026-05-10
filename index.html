@@ -358,7 +358,6 @@ td:first-child { text-align: left; font-family: 'DM Sans', sans-serif; font-weig
     <button class="tab active" data-tab="overview">Overview</button>
     <button class="tab" data-tab="trends">Trends</button>
     <button class="tab" data-tab="table">All Data</button>
-    <button class="tab" data-tab="reports">Reports</button>
     <button class="tab" data-tab="add">+ Add</button>
   </nav>
 
@@ -399,7 +398,7 @@ td:first-child { text-align: left; font-family: 'DM Sans', sans-serif; font-weig
 
   <section id="tab-add" style="display:none">
     <div class="add-form">
-      <div class="slabel">New Sunday Scan</div>
+      <div class="slabel">New Scan</div>
       <div class="fld">
         <label>Date *</label>
         <input type="date" id="f-date" style="width:100%">
@@ -411,43 +410,45 @@ td:first-child { text-align: left; font-family: 'DM Sans', sans-serif; font-weig
       <div class="slabel" id="sl-label">Your scans</div>
       <div id="sl-items"></div>
     </div>
-  </section>
 
-  <section id="tab-reports" style="display:none">
+    <!-- ── Upload section ── -->
+    <div style="margin-top:18px">
+      <div class="slabel">Health Reports</div>
 
-    <!-- Upload zone -->
-    <div class="upload-zone" id="upload-zone">
-      <input type="file" id="pdf-file" onchange="onFileSelected(this)">
-      <div class="upload-icon">📄</div>
-      <div class="upload-ttl">Upload Health Report</div>
-      <div class="upload-sub">PDF, images, docs · Any provider (Hume, DEXA, InBody, Blood Work…)</div>
-    </div>
+      <!-- Upload zone -->
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" id="pdf-file" onchange="onFileSelected(this)">
+        <div class="upload-icon">📎</div>
+        <div class="upload-ttl">Upload a Health Report</div>
+        <div class="upload-sub">Any file type · PDF, images, docs, spreadsheets</div>
+      </div>
 
-    <!-- Upload form (shown after file selected) -->
-    <div class="upload-form" id="upload-form" style="display:none">
-      <div class="slabel">Report Details</div>
-      <div class="upload-preview" id="upload-preview"></div>
-      <div class="fld" style="margin-bottom:10px">
-        <label>Label / Provider *</label>
-        <input type="text" id="rp-label" placeholder="e.g. Hume Scan, DEXA, Blood Work" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+      <!-- Upload form (shown after file selected) -->
+      <div class="upload-form" id="upload-form" style="display:none">
+        <div class="slabel">Report Details</div>
+        <div class="upload-preview" id="upload-preview"></div>
+        <div class="fld" style="margin-bottom:10px">
+          <label>Label / Provider *</label>
+          <input type="text" id="rp-label" placeholder="e.g. Hume Scan, DEXA, Blood Work" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+        </div>
+        <div class="fld" style="margin-bottom:14px">
+          <label>Date *</label>
+          <input type="date" id="rp-date" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+        </div>
+        <div class="progress-bar" id="rp-progress-wrap" style="display:none">
+          <div class="progress-fill" id="rp-progress" style="width:0%"></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-primary" style="margin-top:0" onclick="uploadReport()">Upload →</button>
+          <button class="btn-secondary" style="margin-top:0;flex-shrink:0;width:auto;padding:11px 16px" onclick="cancelUpload()">Cancel</button>
+        </div>
       </div>
-      <div class="fld" style="margin-bottom:14px">
-        <label>Date *</label>
-        <input type="date" id="rp-date" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
-      </div>
-      <div class="progress-bar" id="rp-progress-wrap" style="display:none">
-        <div class="progress-fill" id="rp-progress" style="width:0%"></div>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn-primary" style="margin-top:0" onclick="uploadReport()">Upload →</button>
-        <button class="btn-secondary" style="margin-top:0;flex-shrink:0;width:auto;padding:11px 16px" onclick="cancelUpload()">Cancel</button>
-      </div>
-    </div>
 
-    <!-- Reports list -->
-    <div id="reports-list" style="margin-top:4px">
-      <div class="loading" id="reports-loading" style="padding:30px 20px"><div class="spinner"></div></div>
-      <div id="reports-items"></div>
+      <!-- Reports list -->
+      <div id="reports-list" style="margin-top:4px">
+        <div class="loading" id="reports-loading" style="padding:30px 20px;display:none"><div class="spinner"></div></div>
+        <div id="reports-items"></div>
+      </div>
     </div>
 
   </section>
@@ -669,7 +670,7 @@ function logout() {
 // ── Load scans ──
 async function loadScans() {
   document.getElementById('loading').style.display = 'flex';
-  ['overview','trends','table','reports','add'].forEach(t => document.getElementById('tab-'+t).style.display = 'none');
+  ['overview','trends','table','add'].forEach(t => document.getElementById('tab-'+t).style.display = 'none');
 
   const { data, error } = await db.from('scans').select('*').eq('user_id', currentUser.id).order('date', { ascending:true });
 
@@ -691,12 +692,11 @@ document.getElementById('tabs').addEventListener('click', e => {
 function showTab(tab) {
   activeTab = tab;
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  ['overview','trends','table','reports','add'].forEach(t => document.getElementById('tab-'+t).style.display = t === tab ? '' : 'none');
-  if (!scans.length && tab !== 'add' && tab !== 'reports') { renderEmpty(tab); return; }
+  ['overview','trends','table','add'].forEach(t => document.getElementById('tab-'+t).style.display = t === tab ? '' : 'none');
+  if (!scans.length && tab !== 'add') { renderEmpty(tab); return; }
   if (tab === 'overview') renderOverview();
   if (tab === 'trends')   renderTrends();
   if (tab === 'table')    renderTable();
-  if (tab === 'reports')  renderReports();
   if (tab === 'add')      renderAdd();
 }
 
@@ -818,6 +818,7 @@ function renderAdd() {
     document.getElementById('scan-list').style.display = '';
     renderScanList();
   }
+  renderReports();
 }
 
 function renderScanList() {
@@ -857,7 +858,6 @@ async function saveScan() {
 async function renderReports() {
   document.getElementById('reports-loading').style.display = 'flex';
   document.getElementById('reports-items').innerHTML = '';
-  cancelUpload();
 
   const { data, error } = await db
     .from('reports')
