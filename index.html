@@ -253,6 +253,53 @@ td:first-child { text-align: left; font-family: 'DM Sans', sans-serif; font-weig
   </div>
 </div>
 
+<!-- ══ CHANGE PIN SCREEN ══════════════════════════ -->
+<div class="auth-screen" id="screen-changepin" style="display:none">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" style="margin-bottom:10px">
+        <path d="M12 2C12 2 7 8 7 13C7 16.866 9.134 20 12 20C14.866 20 17 16.866 17 13C17 8 12 2 12 2Z" fill="#E07B2A" opacity="0.9"/>
+        <path d="M12 8C12 8 9.5 11.5 9.5 14C9.5 15.933 10.567 17 12 17C13.433 17 14.5 15.933 14.5 14C14.5 11.5 12 8 12 8Z" fill="#f3ece0" opacity="0.85"/>
+      </svg>
+      <div class="auth-brand">SoulGainz</div>
+      <div class="auth-title">Change PIN</div>
+      <div class="auth-sub" id="cp-sub">Updating PIN for your account</div>
+    </div>
+
+    <div class="pin-label">Current PIN</div>
+    <div class="pin-row">
+      <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="cp-o0">
+      <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="cp-o1">
+      <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="cp-o2">
+      <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="cp-o3">
+    </div>
+
+    <div class="auth-divider"></div>
+    <div class="pin-label">New PIN</div>
+    <div class="pin-row">
+      <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="cp-n0">
+      <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="cp-n1">
+      <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="cp-n2">
+      <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="cp-n3">
+    </div>
+
+    <div class="auth-divider"></div>
+    <div class="pin-label">Confirm New PIN</div>
+    <div class="pin-row">
+      <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="cp-c0">
+      <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="cp-c1">
+      <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="cp-c2">
+      <input type="tel" maxlength="1" inputmode="numeric" autocomplete="off" id="cp-c3">
+    </div>
+
+    <div class="auth-err" id="cp-err"></div>
+    <div class="auth-ok"  id="cp-ok"></div>
+
+    <button class="btn-primary" onclick="changePin()">Update PIN →</button>
+    <button class="btn-ghost" onclick="showScreen('main-app')">← Cancel</button>
+  </div>
+</div>
+
 <!-- ══ MAIN APP ═══════════════════════════════════ -->
 <div class="app" id="main-app" style="display:none">
 
@@ -270,7 +317,10 @@ td:first-child { text-align: left; font-family: 'DM Sans', sans-serif; font-weig
     <div class="hd-right">
       <div class="hd-user"  id="hd-user">—</div>
       <div class="hd-count" id="hd-count">0 scans</div>
-      <button class="logout-btn" onclick="logout()">Sign out</button>
+      <div style="display:flex;gap:5px;margin-top:4px;justify-content:flex-end">
+        <button class="logout-btn" onclick="openChangePin()">Change PIN</button>
+        <button class="logout-btn" onclick="logout()">Sign out</button>
+      </div>
     </div>
   </header>
 
@@ -433,12 +483,13 @@ function chartOpts(color) {
 
 // ── Screen control ──
 function showScreen(id) {
-  ['screen-signin','screen-register','main-app'].forEach(s => {
+  ['screen-signin','screen-register','screen-changepin','main-app'].forEach(s => {
     const el = document.getElementById(s);
     el.style.display = s === id ? (s === 'main-app' ? '' : 'flex') : 'none';
   });
-  if (id === 'screen-signin') setTimeout(() => document.getElementById('si-username').focus(), 100);
-  if (id === 'screen-register') setTimeout(() => document.getElementById('r-displayname').focus(), 100);
+  if (id === 'screen-signin')    setTimeout(() => document.getElementById('si-username').focus(), 100);
+  if (id === 'screen-register')  setTimeout(() => document.getElementById('r-displayname').focus(), 100);
+  if (id === 'screen-changepin') setTimeout(() => document.getElementById('cp-o0').focus(), 100);
 }
 
 // ── Session ──
@@ -469,6 +520,9 @@ function clearPin(prefix) { [0,1,2,3].forEach(i => { document.getElementById(`${
 wirePins('si-p', null, signIn);
 wirePins('r-p',  'r-c', null);
 wirePins('r-c',  null,  register);
+wirePins('cp-o', 'cp-n', null);
+wirePins('cp-n', 'cp-c', null);
+wirePins('cp-c', null,  changePin);
 
 document.getElementById('si-username').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('si-p0').focus();
@@ -724,6 +778,44 @@ async function saveScan() {
   FIELDS.forEach(({k}) => { document.getElementById('ff-'+k).value = ''; });
   toast('✓ Scan saved!');
   await loadScans();
+}
+
+// ── CHANGE PIN ──
+function openChangePin() {
+  clearPin('cp-o'); clearPin('cp-n'); clearPin('cp-c');
+  document.getElementById('cp-err').textContent = '';
+  document.getElementById('cp-ok').textContent  = '';
+  document.getElementById('cp-sub').textContent = `Updating PIN for @${currentUser.username}`;
+  showScreen('screen-changepin');
+}
+
+async function changePin() {
+  const oldPin  = getPin('cp-o');
+  const newPin  = getPin('cp-n');
+  const confPin = getPin('cp-c');
+
+  if (oldPin.length < 4)  { showErr('cp-err', 'Please enter your current PIN'); return; }
+  if (newPin.length < 4)  { showErr('cp-err', 'Please enter a new 4-digit PIN'); return; }
+  if (newPin !== confPin) { showErr('cp-err', 'New PINs don\'t match — try again'); clearPin('cp-n'); clearPin('cp-c'); document.getElementById('cp-n0').focus(); return; }
+  if (newPin === oldPin)  { showErr('cp-err', 'New PIN must be different from current PIN'); return; }
+
+  // Verify old PIN matches what's in the DB
+  const { data, error: fetchErr } = await db.from('users').select('pin').eq('id', currentUser.id).single();
+  if (fetchErr || !data) { showErr('cp-err', 'Something went wrong — try again'); return; }
+  if (data.pin !== oldPin) { showErr('cp-err', 'Current PIN is incorrect'); clearPin('cp-o'); document.getElementById('cp-o0').focus(); return; }
+
+  // Update PIN
+  const { error: updateErr } = await db.from('users').update({ pin: newPin }).eq('id', currentUser.id);
+  if (updateErr) { showErr('cp-err', 'Error updating PIN — try again'); console.error(updateErr); return; }
+
+  // Update session
+  currentUser.pin = newPin;
+  saveSession(currentUser);
+
+  clearPin('cp-o'); clearPin('cp-n'); clearPin('cp-c');
+  document.getElementById('cp-ok').textContent = '✓ PIN updated successfully!';
+  setTimeout(() => showScreen('main-app'), 1500);
+  toast('✓ PIN updated!');
 }
 
 // ── Boot ──
