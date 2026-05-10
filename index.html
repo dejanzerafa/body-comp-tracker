@@ -930,7 +930,7 @@ async function processReport() {
   btn.disabled = true;
   btn.style.opacity = '0.6';
 
-  // ── Step 1: Upload file to Supabase Storage ─────────────────
+  // ── Step 1: Upload file to Supabase Storage ──────────────────
   statusEl.textContent = '⬆️ Uploading file…';
   document.getElementById('rp-progress-wrap').style.display = '';
   document.getElementById('rp-progress').style.width = '15%';
@@ -952,7 +952,8 @@ async function processReport() {
   document.getElementById('rp-progress').style.width = '35%';
 
   // ── Step 2: AI extraction (PDF and images only) ──────────────
-  let extracted = null;
+  let extracted  = null;
+  let aiError    = null;
 
   if (isPDF || isImage) {
     statusEl.textContent = '🧠 Extracting data with AI…';
@@ -975,20 +976,33 @@ async function processReport() {
         body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{ role:'user', content }] }),
       });
 
-      if (res.ok) {
-        const aiData = await res.json();
+      const aiData = await res.json();
+
+      if (!res.ok) {
+        aiError = aiData.error || `HTTP ${res.status}`;
+        console.error('AI function error:', aiData);
+      } else {
         const rawText = aiData.content?.find(b => b.type === 'text')?.text || '';
-        const match   = rawText.match(/\{[\s\S]*\}/);
-        if (match) extracted = JSON.parse(match[0]);
+        console.log('AI raw response:', rawText);
+        const match = rawText.match(/\{[\s\S]*\}/);
+        if (match) {
+          try { extracted = JSON.parse(match[0]); }
+          catch (e) { aiError = 'Could not parse AI response'; }
+        } else {
+          aiError = 'No JSON found in AI response';
+        }
       }
-    } catch (e) { console.warn('AI extraction failed:', e); }
+    } catch (e) {
+      aiError = e.message;
+      console.error('AI fetch error:', e);
+    }
   }
 
   document.getElementById('rp-progress').style.width = '70%';
 
-  // ── Step 3: Save metadata to reports table ───────────────────
-  const label    = extracted?.provider || pendingFile.name.replace(/\.[^.]+$/, '');
-  const date     = extracted?.date || new Date().toISOString().split('T')[0];
+  // ── Step 3: Save metadata ────────────────────────────────────
+  const label = extracted?.provider || pendingFile.name.replace(/\.[^.]+$/, '');
+  const date  = extracted?.date     || new Date().toISOString().split('T')[0];
 
   const { error: dbErr } = await db.from('reports').insert([{
     user_id: currentUser.id, date, label,
@@ -1003,7 +1017,7 @@ async function processReport() {
 
   document.getElementById('rp-progress').style.width = '100%';
 
-  // ── Step 4: Populate scan fields if data extracted ───────────
+  // ── Step 4: Populate scan form fields ────────────────────────
   let filled = 0;
   if (extracted) {
     const MAP = {
@@ -1032,17 +1046,22 @@ async function processReport() {
   }
 
   // ── Done ─────────────────────────────────────────────────────
-  setTimeout(() => {
-    const msg = filled > 0
-      ? `✓ Done! ${filled} fields filled below — review and save your scan`
-      : '✓ Report saved — fill in scan fields below manually';
-    statusEl.innerHTML = `<span style="color:var(--carb)">${msg}</span>`;
-    document.getElementById('rp-progress-wrap').style.display = 'none';
-    btn.disabled = false; btn.style.opacity = '1';
-    cancelUpload();
-    renderReports();
-    if (filled > 0) document.getElementById('form-fields').scrollIntoView({ behavior:'smooth', block:'start' });
-  }, 400);
+  document.getElementById('rp-progress-wrap').style.display = 'none';
+  btn.disabled = false; btn.style.opacity = '1';
+  cancelUpload();
+  renderReports();
+
+  if (filled > 0) {
+    toast(`✓ ${filled} fields filled — review and save below`);
+    setTimeout(() => document.getElementById('form-fields').scrollIntoView({ behavior:'smooth', block:'start' }), 300);
+  } else if (aiError) {
+    toast(`⚠ AI error: ${aiError} — please fill manually`, 'var(--bad)');
+  } else if (!isPDF && !isImage) {
+    toast('✓ Report saved — fill scan fields manually below');
+    setTimeout(() => document.getElementById('form-fields').scrollIntoView({ behavior:'smooth', block:'start' }), 300);
+  } else {
+    toast('✓ Saved — no data found, fill manually below');
+  }
 }
 
 const EXTRACT_PROMPT = `You are a body composition data extractor. Extract all metrics from this health report. Return ONLY a JSON object:
