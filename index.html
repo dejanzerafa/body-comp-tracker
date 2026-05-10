@@ -397,22 +397,9 @@ td:first-child { text-align: left; font-family: 'DM Sans', sans-serif; font-weig
   </section>
 
   <section id="tab-add" style="display:none">
-    <div class="add-form">
-      <div class="slabel">New Scan</div>
-      <div class="fld">
-        <label>Date *</label>
-        <input type="date" id="f-date" style="width:100%">
-      </div>
-      <div class="form-grid" id="form-fields"></div>
-      <button class="btn-primary" onclick="saveScan()">Save Scan →</button>
-    </div>
-    <div id="scan-list" class="scan-list" style="display:none">
-      <div class="slabel" id="sl-label">Your scans</div>
-      <div id="sl-items"></div>
-    </div>
 
     <!-- ── Upload section ── -->
-    <div style="margin-top:18px">
+    <div style="margin-bottom:18px">
       <div class="slabel">Health Reports</div>
 
       <!-- Upload zone -->
@@ -458,6 +445,20 @@ td:first-child { text-align: left; font-family: 'DM Sans', sans-serif; font-weig
         <div class="loading" id="reports-loading" style="padding:30px 20px;display:none"><div class="spinner"></div></div>
         <div id="reports-items"></div>
       </div>
+    </div>
+
+    <div class="add-form">
+      <div class="slabel">New Scan</div>
+      <div class="fld">
+        <label>Date *</label>
+        <input type="date" id="f-date" style="width:100%">
+      </div>
+      <div class="form-grid" id="form-fields"></div>
+      <button class="btn-primary" onclick="saveScan()">Save Scan →</button>
+    </div>
+    <div id="scan-list" class="scan-list" style="display:none">
+      <div class="slabel" id="sl-label">Your scans</div>
+      <div id="sl-items"></div>
     </div>
 
   </section>
@@ -1044,8 +1045,8 @@ async function extractWithAI() {
       document.getElementById('rp-label').value = extracted.provider;
     }
 
-    // Scroll up to scan form
-    document.querySelector('.add-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Scroll down to scan form
+    document.getElementById('form-fields').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
     statusEl.innerHTML = `<span style="color:var(--carb)">✓ ${filled} field${filled!==1?'s':''} filled — review and save your scan above</span>`;
     btn.textContent = '✨ Re-extract';
