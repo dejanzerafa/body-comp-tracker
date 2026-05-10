@@ -984,12 +984,23 @@ async function processReport() {
       } else {
         const rawText = aiData.content?.find(b => b.type === 'text')?.text || '';
         console.log('AI raw response:', rawText);
-        const match = rawText.match(/\{[\s\S]*\}/);
+
+        // Strip markdown code fences if present
+        const cleaned = rawText
+          .replace(/```json/gi, '')
+          .replace(/```/g, '')
+          .trim();
+
+        // Extract first JSON object
+        const match = cleaned.match(/\{[\s\S]*\}/);
         if (match) {
-          try { extracted = JSON.parse(match[0]); }
-          catch (e) { aiError = 'Could not parse AI response'; }
+          try {
+            extracted = JSON.parse(match[0]);
+          } catch (e) {
+            aiError = `JSON parse error: ${e.message} — raw: ${cleaned.substring(0, 100)}`;
+          }
         } else {
-          aiError = 'No JSON found in AI response';
+          aiError = `No JSON found — raw: ${cleaned.substring(0, 100)}`;
         }
       }
     } catch (e) {
