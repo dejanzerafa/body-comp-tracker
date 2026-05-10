@@ -412,30 +412,15 @@ td:first-child { text-align: left; font-family: 'DM Sans', sans-serif; font-weig
 
       <!-- Upload form (shown after file selected) -->
       <div class="upload-form" id="upload-form" style="display:none">
-        <div class="slabel">Report Details</div>
         <div class="upload-preview" id="upload-preview"></div>
-
-        <!-- AI extraction -->
-        <div id="ai-extract-bar" style="margin-bottom:14px">
-          <button class="btn-secondary" style="margin-top:0;width:100%;display:flex;align-items:center;justify-content:center;gap:8px" onclick="extractWithAI()">
-            <span>✨</span><span>Extract Data with AI</span>
-          </button>
-          <div id="ai-status" style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px;min-height:16px"></div>
-        </div>
-
-        <div class="fld" style="margin-bottom:10px">
-          <label>Label / Provider *</label>
-          <input type="text" id="rp-label" placeholder="e.g. Hume Scan, DEXA, Blood Work" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
-        </div>
-        <div class="fld" style="margin-bottom:14px">
-          <label>Date *</label>
-          <input type="date" id="rp-date" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
-        </div>
+        <div id="ai-status" style="font-size:12px;color:var(--muted);text-align:center;margin:10px 0;min-height:18px"></div>
         <div class="progress-bar" id="rp-progress-wrap" style="display:none">
           <div class="progress-fill" id="rp-progress" style="width:0%"></div>
         </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn-primary" style="margin-top:0" onclick="uploadReport()">Upload →</button>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="btn-primary" id="process-btn" style="margin-top:0;display:flex;align-items:center;justify-content:center;gap:7px" onclick="processReport()">
+            <span>✨</span><span>Extract &amp; Save Report</span>
+          </button>
           <button class="btn-secondary" style="margin-top:0;flex-shrink:0;width:auto;padding:11px 16px" onclick="cancelUpload()">Cancel</button>
         </div>
       </div>
@@ -927,88 +912,100 @@ function onFileSelected(input) {
 
   document.getElementById('upload-zone').style.display = 'none';
   document.getElementById('upload-form').style.display = '';
+  document.getElementById('ai-status').textContent = '';
   document.getElementById('upload-preview').innerHTML = `
     <div class="pdf-icon">${icon}</div>
     <div class="pdf-name">${escHtml(file.name)}</div>
     <div class="pdf-size">${sizeMB} MB</div>`;
-
-  // Pre-fill date from most recent scan if available
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('rp-date').value = today;
-  setTimeout(() => document.getElementById('rp-label').focus(), 100);
 }
 
-async function extractWithAI() {
+async function processReport() {
   if (!pendingFile) return;
 
-  const btn      = document.querySelector('#ai-extract-bar button');
+  const btn      = document.getElementById('process-btn');
   const statusEl = document.getElementById('ai-status');
+  const isImage  = pendingFile.type.startsWith('image/');
+  const isPDF    = pendingFile.type === 'application/pdf';
 
   btn.disabled = true;
   btn.style.opacity = '0.6';
-  statusEl.textContent = '⏳ Reading your report…';
 
-  try {
-    // Convert file to base64
-    const base64 = await new Promise((res, rej) => {
-      const reader = new FileReader();
-      reader.onload  = () => res(reader.result.split(',')[1]);
-      reader.onerror = rej;
-      reader.readAsDataURL(pendingFile);
-    });
+  // ── Step 1: Upload file to Supabase Storage ─────────────────
+  statusEl.textContent = '⬆️ Uploading file…';
+  document.getElementById('rp-progress-wrap').style.display = '';
+  document.getElementById('rp-progress').style.width = '15%';
 
-    const isImage = pendingFile.type.startsWith('image/');
-    const isPDF   = pendingFile.type === 'application/pdf';
+  const safeName    = pendingFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const storagePath = `${currentUser.id}/${Date.now()}-${safeName}`;
 
-    // Build content for Claude
-    let content;
-    if (isImage) {
-      content = [
-        { type: 'image', source: { type: 'base64', media_type: pendingFile.type, data: base64 } },
-        { type: 'text',  text: EXTRACT_PROMPT }
-      ];
-    } else if (isPDF) {
-      content = [
-        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
-        { type: 'text',     text: EXTRACT_PROMPT }
-      ];
-    } else {
-      statusEl.textContent = '⚠ AI extraction only works with PDF or image files.';
-      btn.disabled = false; btn.style.opacity = '1';
-      return;
-    }
+  const { error: upErr } = await db.storage.from('reports').upload(storagePath, pendingFile, {
+    contentType: pendingFile.type || 'application/octet-stream', upsert: false
+  });
 
-    statusEl.textContent = '🧠 Analysing data…';
+  if (upErr) {
+    statusEl.textContent = `⚠ Upload failed: ${upErr.message}`;
+    btn.disabled = false; btn.style.opacity = '1';
+    document.getElementById('rp-progress-wrap').style.display = 'none';
+    return;
+  }
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content }],
-      }),
-    });
+  document.getElementById('rp-progress').style.width = '35%';
 
-    if (!response.ok) throw new Error(`API error: ${response.status}`);
+  // ── Step 2: AI extraction (PDF and images only) ──────────────
+  let extracted = null;
 
-    const data    = await response.json();
-    const rawText = data.content?.find(b => b.type === 'text')?.text || '';
+  if (isPDF || isImage) {
+    statusEl.textContent = '🧠 Extracting data with AI…';
 
-    // Parse JSON from response
-    let extracted;
     try {
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-      extracted = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-    } catch { extracted = null; }
+      const base64 = await new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload  = () => res(reader.result.split(',')[1]);
+        reader.onerror = rej;
+        reader.readAsDataURL(pendingFile);
+      });
 
-    if (!extracted) {
-      statusEl.textContent = '⚠ Could not parse data — please fill in manually.';
-      btn.disabled = false; btn.style.opacity = '1';
-      return;
-    }
+      const content = isPDF
+        ? [{ type:'document', source:{ type:'base64', media_type:'application/pdf', data:base64 } }, { type:'text', text:EXTRACT_PROMPT }]
+        : [{ type:'image',    source:{ type:'base64', media_type:pendingFile.type,   data:base64 } }, { type:'text', text:EXTRACT_PROMPT }];
 
-    // Map extracted values to field keys
+      const res = await fetch('/.netlify/functions/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{ role:'user', content }] }),
+      });
+
+      if (res.ok) {
+        const aiData = await res.json();
+        const rawText = aiData.content?.find(b => b.type === 'text')?.text || '';
+        const match   = rawText.match(/\{[\s\S]*\}/);
+        if (match) extracted = JSON.parse(match[0]);
+      }
+    } catch (e) { console.warn('AI extraction failed:', e); }
+  }
+
+  document.getElementById('rp-progress').style.width = '70%';
+
+  // ── Step 3: Save metadata to reports table ───────────────────
+  const label    = extracted?.provider || pendingFile.name.replace(/\.[^.]+$/, '');
+  const date     = extracted?.date || new Date().toISOString().split('T')[0];
+
+  const { error: dbErr } = await db.from('reports').insert([{
+    user_id: currentUser.id, date, label,
+    filename: pendingFile.name, storage_path: storagePath,
+  }]);
+
+  if (dbErr) {
+    statusEl.textContent = `⚠ Metadata error: ${dbErr.message}`;
+    btn.disabled = false; btn.style.opacity = '1';
+    return;
+  }
+
+  document.getElementById('rp-progress').style.width = '100%';
+
+  // ── Step 4: Populate scan fields if data extracted ───────────
+  let filled = 0;
+  if (extracted) {
     const MAP = {
       weight:          extracted.weight,
       body_fat_pct:    extracted.body_fat_pct    ?? extracted.body_fat_percentage,
@@ -1024,132 +1021,45 @@ async function extractWithAI() {
       metabolic_age:   extracted.metabolic_age,
       health_score:    extracted.health_score,
     };
-
-    // Populate scan form fields
-    let filled = 0;
     Object.entries(MAP).forEach(([k, v]) => {
-      if (v !== undefined && v !== null && v !== '') {
+      if (v !== undefined && v !== null) {
         const el = document.getElementById('ff-' + k);
         if (el) { el.value = parseFloat(v); el.style.borderColor = 'var(--carb)'; filled++; }
       }
     });
-
-    // Fill date if extracted
-    if (extracted.date) {
-      const el = document.getElementById('f-date');
-      if (el && !el.value) el.value = extracted.date;
-    }
-
-    // Auto-fill label if empty
-    if (extracted.provider && !document.getElementById('rp-label').value) {
-      document.getElementById('rp-label').value = extracted.provider;
-    }
-
-    // Scroll down to scan form
-    document.getElementById('form-fields').scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-    statusEl.innerHTML = `<span style="color:var(--carb)">✓ ${filled} field${filled!==1?'s':''} filled — review and save your scan above</span>`;
-    btn.textContent = '✨ Re-extract';
-
-  } catch (err) {
-    console.error('AI extraction error:', err);
-    statusEl.textContent = `⚠ Error: ${err.message}`;
+    const dateEl = document.getElementById('f-date');
+    if (dateEl && !dateEl.value && extracted.date) dateEl.value = extracted.date;
   }
 
-  btn.disabled = false; btn.style.opacity = '1';
+  // ── Done ─────────────────────────────────────────────────────
+  setTimeout(() => {
+    const msg = filled > 0
+      ? `✓ Done! ${filled} fields filled below — review and save your scan`
+      : '✓ Report saved — fill in scan fields below manually';
+    statusEl.innerHTML = `<span style="color:var(--carb)">${msg}</span>`;
+    document.getElementById('rp-progress-wrap').style.display = 'none';
+    btn.disabled = false; btn.style.opacity = '1';
+    cancelUpload();
+    renderReports();
+    if (filled > 0) document.getElementById('form-fields').scrollIntoView({ behavior:'smooth', block:'start' });
+  }, 400);
 }
 
-const EXTRACT_PROMPT = `You are a body composition data extractor. Extract all body composition metrics from this health report.
-
-Return ONLY a JSON object with these exact keys (use null for any not found):
-{
-  "date": "YYYY-MM-DD or null",
-  "provider": "name of the service/provider or null",
-  "weight": number or null,
-  "body_fat_pct": number or null,
-  "body_fat_mass": number or null,
-  "lean_mass": number or null,
-  "skeletal_muscle": number or null,
-  "subcut_fat": number or null,
-  "visceral_fat": number or null,
-  "body_water": number or null,
-  "body_cell_mass": number or null,
-  "bmr": number or null,
-  "heart_rate": number or null,
-  "metabolic_age": number or null,
-  "health_score": number or null
-}
-
-Rules:
-- All weight/mass values in kg
-- body_fat_pct and body_water as percentages (e.g. 20.8 not 0.208)
-- visceral_fat as an index number
-- bmr in kcal
-- heart_rate in BPM
-- Return ONLY the JSON object, no other text`;
+const EXTRACT_PROMPT = `You are a body composition data extractor. Extract all metrics from this health report. Return ONLY a JSON object:
+{"date":"YYYY-MM-DD or null","provider":"service name or null","weight":null,"body_fat_pct":null,"body_fat_mass":null,"lean_mass":null,"skeletal_muscle":null,"subcut_fat":null,"visceral_fat":null,"body_water":null,"body_cell_mass":null,"bmr":null,"heart_rate":null,"metabolic_age":null,"health_score":null}
+Rules: weight/mass in kg, percentages as numbers (20.8 not 0.208), visceral_fat as index, bmr in kcal, heart_rate in BPM. Return ONLY the JSON, no other text.`;
 
 function cancelUpload() {
   pendingFile = null;
   document.getElementById('pdf-file').value = '';
   document.getElementById('upload-zone').style.display = '';
   document.getElementById('upload-form').style.display = 'none';
-  document.getElementById('rp-label').value = '';
-  document.getElementById('rp-date').value  = '';
   document.getElementById('rp-progress-wrap').style.display = 'none';
   document.getElementById('rp-progress').style.width = '0%';
   document.getElementById('ai-status').textContent = '';
-  const btn = document.querySelector('#ai-extract-bar button');
-  if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.innerHTML = '<span>✨</span><span>Extract Data with AI</span>'; }
+  const btn = document.getElementById('process-btn');
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
   FIELDS.forEach(({k}) => { const el = document.getElementById('ff-'+k); if (el) el.style.borderColor = ''; });
-}
-
-async function uploadReport() {
-  if (!pendingFile) return;
-  const label = document.getElementById('rp-label').value.trim();
-  const date  = document.getElementById('rp-date').value;
-  if (!label) { toast('Please enter a label / provider', 'var(--bad)'); return; }
-  if (!date)  { toast('Please select a date', 'var(--bad)'); return; }
-
-  // Build storage path: userId/timestamp-filename.pdf
-  const safeName    = pendingFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-  const storagePath = `${currentUser.id}/${Date.now()}-${safeName}`;
-
-  // Show progress
-  document.getElementById('rp-progress-wrap').style.display = '';
-  document.getElementById('rp-progress').style.width = '30%';
-
-  // Upload to Supabase Storage
-  const { error: upErr } = await db.storage.from('reports').upload(storagePath, pendingFile, { contentType: pendingFile.type || 'application/octet-stream', upsert: false });
-  if (upErr) {
-    console.error('Storage error:', JSON.stringify(upErr));
-    toast(`Upload error: ${upErr.message || upErr.error || 'unknown'}`, 'var(--bad)');
-    document.getElementById('rp-progress-wrap').style.display = 'none';
-    return;
-  }
-
-  document.getElementById('rp-progress').style.width = '80%';
-
-  // Save metadata to reports table
-  const { error: dbErr } = await db.from('reports').insert([{
-    user_id:      currentUser.id,
-    date,
-    label,
-    filename:     pendingFile.name,
-    storage_path: storagePath,
-  }]);
-
-  if (dbErr) {
-    console.error('Metadata error:', JSON.stringify(dbErr));
-    toast(`DB error: ${dbErr.message || dbErr.code || 'unknown'}`, 'var(--bad)');
-    return;
-  }
-
-  document.getElementById('rp-progress').style.width = '100%';
-  setTimeout(() => {
-    toast('✓ Report uploaded!');
-    cancelUpload();
-    renderReports();
-  }, 400);
 }
 
 async function downloadReport(storagePath, filename) {
