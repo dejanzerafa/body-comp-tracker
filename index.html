@@ -417,10 +417,10 @@ td:first-child { text-align: left; font-family: 'DM Sans', sans-serif; font-weig
 
     <!-- Upload zone -->
     <div class="upload-zone" id="upload-zone">
-      <input type="file" accept="application/pdf" id="pdf-file" onchange="onFileSelected(this)">
+      <input type="file" id="pdf-file" onchange="onFileSelected(this)">
       <div class="upload-icon">📄</div>
       <div class="upload-ttl">Upload Health Report</div>
-      <div class="upload-sub">PDF only · Any provider (Hume, DEXA, InBody, Blood Work…)</div>
+      <div class="upload-sub">PDF, images, docs · Any provider (Hume, DEXA, InBody, Blood Work…)</div>
     </div>
 
     <!-- Upload form (shown after file selected) -->
@@ -874,16 +874,22 @@ async function renderReports() {
     document.getElementById('reports-items').innerHTML = `
       <div class="empty-state">
         <h3>No reports yet</h3>
-        <p>Upload a PDF from any health service above<br>and it'll appear here.</p>
+        <p>Upload any file from any health service above<br>and it'll appear here.</p>
       </div>`;
     return;
   }
 
   document.getElementById('reports-items').innerHTML = `
     <div class="slabel">${reports.length} report${reports.length !== 1 ? 's' : ''}</div>
-    ${reports.map(r => `
+    ${reports.map(r => {
+      const icon = r.filename.match(/\.(jpg|jpeg|png|gif|webp|heic)$/i) ? '🖼️'
+                 : r.filename.match(/\.pdf$/i) ? '📄'
+                 : r.filename.match(/\.(xlsx?|csv)$/i) ? '📊'
+                 : r.filename.match(/\.(docx?)$/i) ? '📝'
+                 : '📎';
+      return `
       <div class="report-item">
-        <div class="ri-icon">📄</div>
+        <div class="ri-icon">${icon}</div>
         <div class="ri-info">
           <div class="ri-label">${escHtml(r.label)}</div>
           <div class="ri-meta">${fmt(r.date)} · ${escHtml(r.filename)}</div>
@@ -892,8 +898,8 @@ async function renderReports() {
           <button class="ri-btn" onclick="downloadReport('${r.storage_path}','${escHtml(r.filename)}')">View</button>
           <button class="ri-btn del" onclick="deleteReport('${r.id}','${r.storage_path}')">✕</button>
         </div>
-      </div>
-    `).join('')}`;
+      </div>`;
+    }).join('')}`;
 }
 
 function escHtml(str) {
@@ -903,16 +909,16 @@ function escHtml(str) {
 function onFileSelected(input) {
   const file = input.files[0];
   if (!file) return;
-  if (file.type !== 'application/pdf') { toast('Please select a PDF file', 'var(--bad)'); input.value = ''; return; }
-  if (file.size > 20 * 1024 * 1024)   { toast('File too large — max 20MB', 'var(--bad)'); input.value = ''; return; }
+  if (file.size > 20 * 1024 * 1024) { toast('File too large — max 20MB', 'var(--bad)'); input.value = ''; return; }
 
   pendingFile = file;
   const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+  const icon = file.type.startsWith('image/') ? '🖼️' : file.type === 'application/pdf' ? '📄' : file.name.match(/\.(xlsx?|csv)$/i) ? '📊' : '📎';
 
   document.getElementById('upload-zone').style.display = 'none';
   document.getElementById('upload-form').style.display = '';
   document.getElementById('upload-preview').innerHTML = `
-    <div class="pdf-icon">📄</div>
+    <div class="pdf-icon">${icon}</div>
     <div class="pdf-name">${escHtml(file.name)}</div>
     <div class="pdf-size">${sizeMB} MB</div>`;
 
@@ -949,7 +955,7 @@ async function uploadReport() {
   document.getElementById('rp-progress').style.width = '30%';
 
   // Upload to Supabase Storage
-  const { error: upErr } = await db.storage.from('reports').upload(storagePath, pendingFile, { contentType: 'application/pdf', upsert: false });
+  const { error: upErr } = await db.storage.from('reports').upload(storagePath, pendingFile, { contentType: pendingFile.type || 'application/octet-stream', upsert: false });
   if (upErr) { toast('Upload failed — try again', 'var(--bad)'); console.error(upErr); document.getElementById('rp-progress-wrap').style.display = 'none'; return; }
 
   document.getElementById('rp-progress').style.width = '80%';
