@@ -831,8 +831,15 @@ function renderScanList() {
 }
 
 async function saveScan() {
-  const date = document.getElementById('f-date').value;
-  if (!date) { toast('Please select a date', 'var(--bad)'); return; }
+  let date = document.getElementById('f-date').value;
+
+  // Auto-set today if date is missing
+  if (!date) {
+    date = new Date().toISOString().split('T')[0];
+    document.getElementById('f-date').value = date;
+    toast('Date set to today — change if needed', 'var(--flame)');
+    return;
+  }
 
   const scan = { date, user_id: currentUser.id };
   FIELDS.forEach(({k}) => {
@@ -841,10 +848,15 @@ async function saveScan() {
   });
 
   const { error } = await db.from('scans').upsert([scan], { onConflict:'date,user_id' });
-  if (error) { toast('Error saving scan', 'var(--bad)'); console.error(error); return; }
+  if (error) {
+    console.error('Save scan error:', error);
+    toast(`Error: ${error.message || error.code || 'unknown'}`, 'var(--bad)');
+    return;
+  }
 
   document.getElementById('f-date').value = '';
   FIELDS.forEach(({k}) => { document.getElementById('ff-'+k).value = ''; });
+  FIELDS.forEach(({k}) => { const el = document.getElementById('ff-'+k); if (el) el.style.borderColor = ''; });
   toast('✓ Scan saved!');
   await loadScans();
 }
@@ -1053,12 +1065,16 @@ async function processReport() {
       }
     });
     const dateEl = document.getElementById('f-date');
-    if (dateEl && !dateEl.value && extracted.date) dateEl.value = extracted.date;
+    if (dateEl) dateEl.value = extracted.date || new Date().toISOString().split('T')[0];
   }
 
   // ── Done ─────────────────────────────────────────────────────
   document.getElementById('rp-progress-wrap').style.display = 'none';
   btn.disabled = false; btn.style.opacity = '1';
+  // Always ensure date field has a value
+  const scanDateEl = document.getElementById('f-date');
+  if (scanDateEl && !scanDateEl.value) scanDateEl.value = new Date().toISOString().split('T')[0];
+
   cancelUpload();
   renderReports();
 
