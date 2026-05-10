@@ -144,6 +144,36 @@ td:first-child { text-align: left; font-family: 'DM Sans', sans-serif; font-weig
 .empty-state h3 { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--sub); margin-bottom: 8px; }
 .empty-state p { font-size: 12px; line-height: 1.7; }
 
+/* ── Reports ── */
+.upload-zone {
+  background: var(--card); border: 2px dashed var(--border);
+  border-radius: var(--r); padding: 32px 20px;
+  text-align: center; cursor: pointer; transition: all .2s;
+  margin-bottom: 14px; position: relative;
+}
+.upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: var(--card2); }
+.upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.upload-icon { font-size: 28px; margin-bottom: 8px; }
+.upload-ttl  { font-size: 14px; font-weight: 700; color: var(--sub); margin-bottom: 4px; }
+.upload-sub  { font-size: 11px; color: var(--muted); }
+.upload-form { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 14px; }
+.upload-preview { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; }
+.upload-preview .pdf-icon { font-size: 22px; flex-shrink: 0; }
+.upload-preview .pdf-name { font-size: 12px; color: var(--sub); font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upload-preview .pdf-size { font-size: 10px; color: var(--muted); flex-shrink: 0; }
+.progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin: 10px 0; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s; }
+.report-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--card2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; }
+.report-item:last-child { margin-bottom: 0; }
+.ri-icon { font-size: 22px; flex-shrink: 0; }
+.ri-info { flex: 1; min-width: 0; }
+.ri-label { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.ri-meta  { font-size: 10px; color: var(--muted); }
+.ri-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.ri-btn { padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; border: 1px solid var(--border); background: transparent; color: var(--sub); transition: all .2s; }
+.ri-btn:hover { border-color: var(--accent); color: var(--accent); }
+.ri-btn.del:hover { border-color: var(--bad); color: var(--bad); }
+
 .alert { background: var(--card2); border: 1px solid var(--border); border-left: 3px solid var(--flame); border-radius: 10px; padding: 11px 14px; font-size: 11px; color: var(--sub); line-height: 1.7; }
 .alert strong { color: var(--flame); }
 
@@ -328,6 +358,7 @@ td:first-child { text-align: left; font-family: 'DM Sans', sans-serif; font-weig
     <button class="tab active" data-tab="overview">Overview</button>
     <button class="tab" data-tab="trends">Trends</button>
     <button class="tab" data-tab="table">All Data</button>
+    <button class="tab" data-tab="reports">Reports</button>
     <button class="tab" data-tab="add">+ Add</button>
   </nav>
 
@@ -382,6 +413,45 @@ td:first-child { text-align: left; font-family: 'DM Sans', sans-serif; font-weig
     </div>
   </section>
 
+  <section id="tab-reports" style="display:none">
+
+    <!-- Upload zone -->
+    <div class="upload-zone" id="upload-zone">
+      <input type="file" accept="application/pdf" id="pdf-file" onchange="onFileSelected(this)">
+      <div class="upload-icon">📄</div>
+      <div class="upload-ttl">Upload Health Report</div>
+      <div class="upload-sub">PDF only · Any provider (Hume, DEXA, InBody, Blood Work…)</div>
+    </div>
+
+    <!-- Upload form (shown after file selected) -->
+    <div class="upload-form" id="upload-form" style="display:none">
+      <div class="slabel">Report Details</div>
+      <div class="upload-preview" id="upload-preview"></div>
+      <div class="fld" style="margin-bottom:10px">
+        <label>Label / Provider *</label>
+        <input type="text" id="rp-label" placeholder="e.g. Hume Scan, DEXA, Blood Work" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+      </div>
+      <div class="fld" style="margin-bottom:14px">
+        <label>Date *</label>
+        <input type="date" id="rp-date" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+      </div>
+      <div class="progress-bar" id="rp-progress-wrap" style="display:none">
+        <div class="progress-fill" id="rp-progress" style="width:0%"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-primary" style="margin-top:0" onclick="uploadReport()">Upload →</button>
+        <button class="btn-secondary" style="margin-top:0;flex-shrink:0;width:auto;padding:11px 16px" onclick="cancelUpload()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Reports list -->
+    <div id="reports-list" style="margin-top:4px">
+      <div class="loading" id="reports-loading" style="padding:30px 20px"><div class="spinner"></div></div>
+      <div id="reports-items"></div>
+    </div>
+
+  </section>
+
   <footer class="footer">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
       <path d="M12 2C12 2 7 8 7 13C7 16.866 9.134 20 12 20C14.866 20 17 16.866 17 13C17 8 12 2 12 2Z" fill="#E07B2A" opacity="0.9"/>
@@ -433,10 +503,12 @@ const CHART_METRICS = [
 // ── State ──
 let currentUser = null;
 let scans       = [];
+let reports     = [];
 let activeTab   = 'overview';
 let activeMet   = 'weight';
 let wChart      = null;
 let trChart     = null;
+let pendingFile = null;
 
 // ── Helpers ──
 const fmt = d => new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short' });
@@ -597,7 +669,7 @@ function logout() {
 // ── Load scans ──
 async function loadScans() {
   document.getElementById('loading').style.display = 'flex';
-  ['overview','trends','table','add'].forEach(t => document.getElementById('tab-'+t).style.display = 'none');
+  ['overview','trends','table','reports','add'].forEach(t => document.getElementById('tab-'+t).style.display = 'none');
 
   const { data, error } = await db.from('scans').select('*').eq('user_id', currentUser.id).order('date', { ascending:true });
 
@@ -619,11 +691,12 @@ document.getElementById('tabs').addEventListener('click', e => {
 function showTab(tab) {
   activeTab = tab;
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  ['overview','trends','table','add'].forEach(t => document.getElementById('tab-'+t).style.display = t === tab ? '' : 'none');
-  if (!scans.length && tab !== 'add') { renderEmpty(tab); return; }
+  ['overview','trends','table','reports','add'].forEach(t => document.getElementById('tab-'+t).style.display = t === tab ? '' : 'none');
+  if (!scans.length && tab !== 'add' && tab !== 'reports') { renderEmpty(tab); return; }
   if (tab === 'overview') renderOverview();
   if (tab === 'trends')   renderTrends();
   if (tab === 'table')    renderTable();
+  if (tab === 'reports')  renderReports();
   if (tab === 'add')      renderAdd();
 }
 
@@ -779,6 +852,162 @@ async function saveScan() {
   toast('✓ Scan saved!');
   await loadScans();
 }
+
+// ── REPORTS ──
+async function renderReports() {
+  document.getElementById('reports-loading').style.display = 'flex';
+  document.getElementById('reports-items').innerHTML = '';
+  cancelUpload();
+
+  const { data, error } = await db
+    .from('reports')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('date', { ascending: false });
+
+  document.getElementById('reports-loading').style.display = 'none';
+
+  if (error) { toast('Error loading reports', 'var(--bad)'); return; }
+  reports = data || [];
+
+  if (!reports.length) {
+    document.getElementById('reports-items').innerHTML = `
+      <div class="empty-state">
+        <h3>No reports yet</h3>
+        <p>Upload a PDF from any health service above<br>and it'll appear here.</p>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('reports-items').innerHTML = `
+    <div class="slabel">${reports.length} report${reports.length !== 1 ? 's' : ''}</div>
+    ${reports.map(r => `
+      <div class="report-item">
+        <div class="ri-icon">📄</div>
+        <div class="ri-info">
+          <div class="ri-label">${escHtml(r.label)}</div>
+          <div class="ri-meta">${fmt(r.date)} · ${escHtml(r.filename)}</div>
+        </div>
+        <div class="ri-actions">
+          <button class="ri-btn" onclick="downloadReport('${r.storage_path}','${escHtml(r.filename)}')">View</button>
+          <button class="ri-btn del" onclick="deleteReport('${r.id}','${r.storage_path}')">✕</button>
+        </div>
+      </div>
+    `).join('')}`;
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function onFileSelected(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.type !== 'application/pdf') { toast('Please select a PDF file', 'var(--bad)'); input.value = ''; return; }
+  if (file.size > 20 * 1024 * 1024)   { toast('File too large — max 20MB', 'var(--bad)'); input.value = ''; return; }
+
+  pendingFile = file;
+  const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+
+  document.getElementById('upload-zone').style.display = 'none';
+  document.getElementById('upload-form').style.display = '';
+  document.getElementById('upload-preview').innerHTML = `
+    <div class="pdf-icon">📄</div>
+    <div class="pdf-name">${escHtml(file.name)}</div>
+    <div class="pdf-size">${sizeMB} MB</div>`;
+
+  // Pre-fill date from most recent scan if available
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('rp-date').value = today;
+  setTimeout(() => document.getElementById('rp-label').focus(), 100);
+}
+
+function cancelUpload() {
+  pendingFile = null;
+  document.getElementById('pdf-file').value = '';
+  document.getElementById('upload-zone').style.display = '';
+  document.getElementById('upload-form').style.display = 'none';
+  document.getElementById('rp-label').value = '';
+  document.getElementById('rp-date').value  = '';
+  document.getElementById('rp-progress-wrap').style.display = 'none';
+  document.getElementById('rp-progress').style.width = '0%';
+}
+
+async function uploadReport() {
+  if (!pendingFile) return;
+  const label = document.getElementById('rp-label').value.trim();
+  const date  = document.getElementById('rp-date').value;
+  if (!label) { toast('Please enter a label / provider', 'var(--bad)'); return; }
+  if (!date)  { toast('Please select a date', 'var(--bad)'); return; }
+
+  // Build storage path: userId/timestamp-filename.pdf
+  const safeName    = pendingFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const storagePath = `${currentUser.id}/${Date.now()}-${safeName}`;
+
+  // Show progress
+  document.getElementById('rp-progress-wrap').style.display = '';
+  document.getElementById('rp-progress').style.width = '30%';
+
+  // Upload to Supabase Storage
+  const { error: upErr } = await db.storage.from('reports').upload(storagePath, pendingFile, { contentType: 'application/pdf', upsert: false });
+  if (upErr) { toast('Upload failed — try again', 'var(--bad)'); console.error(upErr); document.getElementById('rp-progress-wrap').style.display = 'none'; return; }
+
+  document.getElementById('rp-progress').style.width = '80%';
+
+  // Save metadata to reports table
+  const { error: dbErr } = await db.from('reports').insert([{
+    user_id:      currentUser.id,
+    date,
+    label,
+    filename:     pendingFile.name,
+    storage_path: storagePath,
+  }]);
+
+  if (dbErr) {
+    toast('Saved file but metadata failed — contact support', 'var(--bad)');
+    console.error(dbErr);
+    return;
+  }
+
+  document.getElementById('rp-progress').style.width = '100%';
+  setTimeout(() => {
+    toast('✓ Report uploaded!');
+    cancelUpload();
+    renderReports();
+  }, 400);
+}
+
+async function downloadReport(storagePath, filename) {
+  const { data, error } = await db.storage.from('reports').createSignedUrl(storagePath, 60);
+  if (error) { toast('Could not open report', 'var(--bad)'); console.error(error); return; }
+  window.open(data.signedUrl, '_blank');
+}
+
+async function deleteReport(id, storagePath) {
+  if (!confirm('Delete this report? This cannot be undone.')) return;
+
+  const { error: stErr } = await db.storage.from('reports').remove([storagePath]);
+  if (stErr) console.warn('Storage delete issue:', stErr);
+
+  const { error: dbErr } = await db.from('reports').delete().eq('id', id);
+  if (dbErr) { toast('Error deleting report', 'var(--bad)'); console.error(dbErr); return; }
+
+  toast('Report deleted');
+  renderReports();
+}
+
+// Drag & drop on upload zone
+document.addEventListener('DOMContentLoaded', () => {
+  const zone = document.getElementById('upload-zone');
+  if (!zone) return;
+  zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if (file) { const input = document.getElementById('pdf-file'); const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files; onFileSelected(input); }
+  });
+});
 
 // ── CHANGE PIN ──
 function openChangePin() {
