@@ -956,7 +956,12 @@ async function uploadReport() {
 
   // Upload to Supabase Storage
   const { error: upErr } = await db.storage.from('reports').upload(storagePath, pendingFile, { contentType: pendingFile.type || 'application/octet-stream', upsert: false });
-  if (upErr) { toast('Upload failed — try again', 'var(--bad)'); console.error(upErr); document.getElementById('rp-progress-wrap').style.display = 'none'; return; }
+  if (upErr) {
+    console.error('Storage error:', JSON.stringify(upErr));
+    toast(`Upload error: ${upErr.message || upErr.error || 'unknown'}`, 'var(--bad)');
+    document.getElementById('rp-progress-wrap').style.display = 'none';
+    return;
+  }
 
   document.getElementById('rp-progress').style.width = '80%';
 
@@ -970,8 +975,8 @@ async function uploadReport() {
   }]);
 
   if (dbErr) {
-    toast('Saved file but metadata failed — contact support', 'var(--bad)');
-    console.error(dbErr);
+    console.error('Metadata error:', JSON.stringify(dbErr));
+    toast(`DB error: ${dbErr.message || dbErr.code || 'unknown'}`, 'var(--bad)');
     return;
   }
 
